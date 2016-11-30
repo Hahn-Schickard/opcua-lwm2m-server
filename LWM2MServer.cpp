@@ -1,0 +1,533 @@
+/*
+ * --- License -------------------------------------------------------------- *
+ */
+
+/*
+ * Copyright (c) 2015
+ *
+ * Hochschule Offenburg, University of Applied Sciences
+ * Institute for reliable Embedded Systems
+ * and Communications Electronic (ivESK)
+ *
+ * All rights reserved
+*/
+
+/*
+ * --- Module Description --------------------------------------------------- *
+ */
+
+/**
+ * \file    LWM2MServer.Cpp
+ * \author  Institute of reliable Embedded Systems
+ *          and Communication Electronics
+ * \date    $Date$
+ * \version $Version$
+ *
+ * \brief   Description of a LWM2M Server
+ *
+ */
+
+/*
+ * --- Includes ------------------------------------------------------------- *
+ */
+#include <stdint.h>
+#include <string.h>
+#include <iostream>
+#include <string>
+#include "LWM2MServer.h"
+#include "LWM2MDevice.h"
+#include "LWM2MObject.h"
+#include "LWM2MResource.h"
+#include "er-coap-13/er-coap-13.h"
+
+
+/*
+ * --- Macro Definitions----------------------------------------------------- *
+ */
+
+/** Maximum size of a packet */
+#define LWM2MSERVER_MAX_PACKET_SIZE 		1500
+
+
+/*
+ * --- Methods Definition --------------------------------------------------- *
+ */
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::startServer()
+*/
+int16_t LWM2MServer::startServer( void )
+{
+	/* stop running server before restarting */
+	if( stopServer() != 0)
+		return -1;
+
+	mp_cbUserData = new struct s_cbparams_t();
+	memset( mp_cbUserData, 0, sizeof(s_cbparams_t) );
+
+	/* create the socket */
+	m_sock = create_socket( m_port.c_str(), m_addrFam );
+	if( m_sock < 0 )
+	{
+		/* socket could not be created */
+		return -2;
+	}
+
+	/* initialize LWM2M context */
+    mp_lwm2mH = lwm2m_init( NULL );
+    if (NULL == mp_lwm2mH)
+    {
+    	/* LWM2M context could not be created */
+        return -3;
+    }
+
+    /* register monitoring callback */
+    lwm2m_set_monitoring_callback( mp_lwm2mH, notifyCb, mp_cbUserData );
+
+    return 0;
+
+} /* LWM2MServer::startServer() */
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::stopServer()
+*/
+int16_t LWM2MServer::stopServer( void )
+{
+	if( mp_connList != NULL )
+	{
+		/* reset the connection list */
+		connection_free( mp_connList );
+		mp_connList = NULL;
+	}
+
+	if( m_sock != -1 )
+	{
+		/* socket was used and must be closed */
+		close( m_sock );
+		m_sock = -1;
+	}
+
+	if( mp_lwm2mH != NULL )
+	{
+		/* close existing LWM2M context */
+		lwm2m_close( mp_lwm2mH );
+		mp_lwm2mH = NULL;
+	}
+
+	if( mp_cbUserData != NULL )
+	{
+		delete mp_cbUserData;
+		mp_cbUserData = NULL;
+	}
+
+	return 0;
+
+} /* LWM2MServer::stopServer() */
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::runServer()
+*/
+int16_t LWM2MServer::runServer( void )
+{
+    fd_set readfds;
+    struct timeval tv;
+    int result;
+
+	FD_ZERO( &readfds );
+	FD_SET( m_sock, &readfds );
+
+	tv.tv_sec = 2;
+	tv.tv_usec = 0;
+
+	result = lwm2m_step(mp_lwm2mH, &(tv.tv_sec) );
+	if (result != 0)
+	{
+	    return -1;
+	}
+
+	result = select(FD_SETSIZE, &readfds, 0, 0, &tv);
+
+	if ( result < 0 )
+	{
+		return -1;
+	}
+	else if (result > 0)
+	{
+	    uint8_t buffer[LWM2MSERVER_MAX_PACKET_SIZE];
+	    int numBytes;
+
+	    if( FD_ISSET( m_sock, &readfds ) )
+	    {
+	        struct sockaddr_storage addr;
+	        socklen_t addrLen;
+
+	        addrLen = sizeof(addr);
+	        numBytes = recvfrom( m_sock, buffer, LWM2MSERVER_MAX_PACKET_SIZE, 0,
+	        		(struct sockaddr *)&addr, &addrLen);
+
+	        if (numBytes == -1)
+	        {
+	            return -2;
+	        }
+	        else
+	        {
+	            char s[INET6_ADDRSTRLEN];
+	            connection_t * connP;
+
+				s[0] = 0;
+	            if (AF_INET == addr.ss_family)
+	            {
+	                struct sockaddr_in *saddr = (struct sockaddr_in *)&addr;
+	                inet_ntop(saddr->sin_family, &saddr->sin_addr, s, INET6_ADDRSTRLEN);
+	            }
+	            else if (AF_INET6 == addr.ss_family)
+	            {
+	                struct sockaddr_in6 *saddr = (struct sockaddr_in6 *)&addr;
+	                inet_ntop(saddr->sin6_family, &saddr->sin6_addr, s, INET6_ADDRSTRLEN);
+	            }
+
+	            connP = connection_find(mp_connList, &addr, addrLen);
+	            if( connP == NULL )
+	            {
+	                connP = connection_new_incoming( mp_connList, m_sock,
+	                		(struct sockaddr *)&addr, addrLen );
+	                if( connP != NULL )
+	                {
+	                    mp_connList = connP;
+	                }
+	            }
+	            if( connP != NULL )
+	            {
+	                lwm2m_handle_packet( mp_lwm2mH, buffer, numBytes, connP );
+	            }
+	        }
+	    }
+	}
+	return 0;
+} /* LWM2MServer::runServer() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::hasDevice
+*/
+bool LWM2MServer::hasDevice( std::string client ) const
+{
+    if( !isAlive() )
+    	return false;
+
+    if( getDevice( client ) == NULL )
+    	return false;
+
+    return true;
+
+} /* LWM2MServer::hasDevice() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::read()
+*/
+int8_t LWM2MServer::read( const LWM2MResource* p_res, std::string& val,
+		s_cbparams_t* p_cbParams )
+{
+	lwm2m_client_t* p_cli;
+	const LWM2MDevice* p_dev;
+	const LWM2MObject* p_obj;
+	lwm2m_uri_t uri;
+	val = "";
+	s_cbparams_t* p_cbData = NULL;
+	s_cbparams_t cbData;
+	int ret;
+
+	if( p_cbParams == NULL )
+	{
+		/* create local cb parameters for blocking operation */
+		p_cbData = &cbData;
+		memset( p_cbData, 0, sizeof(s_cbparams_t) );
+	}
+	else
+	{
+		/* non-blocking operation with callback parameters */
+		p_cbData = p_cbParams;
+	}
+
+	if( (!isAlive()) || (p_res == NULL) )
+    	return -1;
+
+	/* get object of the resource */
+	p_obj = p_res->getParent();
+	if( p_obj == NULL )
+		return -1;
+
+	/* get device of the resource */
+	p_dev = p_obj->getParent();
+	if( p_dev == NULL )
+		return -1;
+
+	/* find the device in the list of registered devices */
+	p_cli = getDevice( p_dev->getName() );
+	if( p_cli == NULL )
+		return -1;
+
+	/* start the query with the according values */
+	uri.objectId = p_obj->getObjId();
+	uri.instanceId = p_obj->getInstId();
+	uri.resourceId = p_res->getResId();
+	uri.flag = LWM2M_URI_FLAG_OBJECT_ID | LWM2M_URI_FLAG_INSTANCE_ID |
+			LWM2M_URI_FLAG_RESOURCE_ID;
+
+	p_cbData->p_res = p_res;
+	p_cbData->lwm2mParams.status = NO_ERROR;
+	ret = lwm2m_dm_read( mp_lwm2mH, p_cli->internalID, &uri, notifyCb, p_cbData);
+
+	if( ret != COAP_NO_ERROR )
+		return -1;
+
+	if( p_cbParams == NULL )
+	{
+		while( p_cbData->lwm2mParams.status == NO_ERROR )
+			runServer();
+
+		if( (p_cbData->lwm2mParams.status == CONTENT_2_05) &&
+				(p_cbData->lwm2mParams.format == LWM2M_CONTENT_TEXT))
+		{
+			val = std::string((char*)p_cbData->lwm2mParams.data);
+			return 0;
+		}
+	}
+	else
+	{
+		/* do not wait for the result */
+		return 0;
+	}
+
+	return -1;
+
+} /* LWM2MServer::read() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::write()
+*/
+int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
+		s_cbparams_t* p_cbParams )
+{
+	lwm2m_client_t* p_cli;
+	const LWM2MDevice* p_dev;
+	const LWM2MObject* p_obj;
+	lwm2m_uri_t uri;
+	s_cbparams_t* p_cbData = NULL;
+	s_cbparams_t cbData;
+	int ret;
+
+	if( p_cbParams == NULL )
+	{
+		/* create local cb parameters for blocking operation */
+		p_cbData = &cbData;
+		memset( p_cbData, 0, sizeof(s_cbparams_t) );
+	}
+	else
+	{
+		/* non-blocking operation with callback parameters */
+		p_cbData = p_cbParams;
+	}
+
+	if( (!isAlive()) || (p_res == NULL)   )
+    	return -1;
+
+	/* get object of the resource */
+	p_obj = p_res->getParent();
+	if( p_obj == NULL )
+		return -1;
+
+	/* get device of the resource */
+	p_dev = p_obj->getParent();
+	if( p_dev == NULL )
+		return -1;
+
+	/* find the device in the list of registered devices */
+	p_cli = getDevice( p_dev->getName() );
+	if( p_cli == NULL )
+		return -1;
+
+	/* start the query with the according values */
+	uri.objectId = p_obj->getObjId();
+	uri.instanceId = p_obj->getInstId();
+	uri.resourceId = p_res->getResId();
+	uri.flag = LWM2M_URI_FLAG_OBJECT_ID | LWM2M_URI_FLAG_INSTANCE_ID | LWM2M_URI_FLAG_RESOURCE_ID;
+
+	p_cbData->p_res = p_res;
+	p_cbData->lwm2mParams.status = NO_ERROR;
+
+	ret = lwm2m_dm_write( mp_lwm2mH, p_cli->internalID, &uri, LWM2M_CONTENT_TEXT,
+			(uint8_t*)val.c_str(), val.length(), notifyCb, p_cbData  );
+
+
+	if( ret != COAP_NO_ERROR )
+			return -1;
+
+	if( p_cbParams == NULL )
+	{
+		while( p_cbData->lwm2mParams.status == NO_ERROR )
+			runServer();
+	}
+	else
+	{
+		/* do not wait for the result */
+		return 0;
+	}
+
+	if( p_cbData->lwm2mParams.status == CHANGED_2_04 )
+		return 0;
+
+	return -1;
+
+} /* LWM2MServer::write() */
+
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::observe()
+*/
+int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
+		s_cbparams_t* p_cbParams )
+{
+	lwm2m_client_t* p_cli;
+	const LWM2MDevice* p_dev;
+	const LWM2MObject* p_obj;
+	lwm2m_uri_t uri;
+
+	s_cbparams_t* p_cbData = NULL;
+	int ret;
+
+	if( (p_cbParams == NULL) && (observe == true) )
+	{
+		/* blocking operation is not possible for observe*/
+		return -1;
+	}
+
+	if( p_cbParams != NULL )
+		/* non-blocking operation with callback parameters */
+		p_cbData = p_cbParams;
+
+
+	if( (!isAlive()) || (p_res == NULL) )
+    	return -1;
+
+	/* get object of the resource */
+	p_obj = p_res->getParent();
+	if( p_obj == NULL )
+		return -1;
+
+	/* get device of the resource */
+	p_dev = p_obj->getParent();
+	if( p_dev == NULL )
+		return -1;
+
+	/* find the device in the list of registered devices */
+	p_cli = getDevice( p_dev->getName() );
+	if( p_cli == NULL )
+		return -1;
+
+	/* start the query with the according values */
+	uri.objectId = p_obj->getObjId();
+	uri.instanceId = p_obj->getInstId();
+	uri.resourceId = p_res->getResId();
+	uri.flag = LWM2M_URI_FLAG_OBJECT_ID | LWM2M_URI_FLAG_INSTANCE_ID |
+			LWM2M_URI_FLAG_RESOURCE_ID;
+
+	if( observe == true )
+	{
+		/* start observation */
+		p_cbData->p_res = p_res;
+		p_cbData->lwm2mParams.obsInit = true;
+		p_cbData->lwm2mParams.status = NO_ERROR;
+
+		ret = lwm2m_observe( mp_lwm2mH, p_cli->internalID, &uri, notifyCb, p_cbData);
+
+		if( ret != COAP_NO_ERROR )
+			return -1;
+		else
+			return 0;
+	}
+	else
+	{
+		/* cancel observation */
+		ret = lwm2m_observe_cancel( mp_lwm2mH, p_cli->internalID, &uri, notifyCb, p_cbData);
+
+		if( ret != COAP_NO_ERROR )
+			return -1;
+		else
+			return 0;
+	}
+
+	return -1;
+
+} /* LWM2MServer::observe() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::getDevice()
+*/
+lwm2m_client_t* LWM2MServer::getDevice( std::string client ) const
+{
+	if( !isAlive() )
+    	return NULL;
+
+	/* client pointer */
+	lwm2m_client_t * p_targetP;
+	p_targetP = mp_lwm2mH->clientList;
+
+	if (p_targetP == NULL)
+	{
+		return NULL;
+	}
+
+	for( p_targetP = mp_lwm2mH->clientList; p_targetP != NULL;
+			p_targetP = p_targetP->next )
+	{
+		if( p_targetP != NULL )
+		{
+			if( client ==  p_targetP->name)
+				return p_targetP;
+		}
+	}
+
+	return NULL;
+
+} /* LWM2MServer::getDevice() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::notifyCb()
+*/
+void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+		lwm2m_media_type_t format, uint8_t * data, int dataLength,
+		void * userData )
+{
+	/* convert user data to server instance */
+	s_cbparams_t* p_inst = (s_cbparams_t*)userData;
+
+	/* set LWM2M parameters */
+	p_inst->lwm2mParams.clientID = clientID;
+	p_inst->lwm2mParams.uriP = uriP;
+	p_inst->lwm2mParams.status = status;
+	p_inst->lwm2mParams.format = format;
+	p_inst->lwm2mParams.data = data;
+	p_inst->lwm2mParams.dataLength = dataLength;
+
+	if( p_inst->p_res != NULL )
+		/* call the notification */
+		p_inst->p_res->notifyObservers( &p_inst->lwm2mParams );
+};
+
+
