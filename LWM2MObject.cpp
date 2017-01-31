@@ -49,11 +49,11 @@
 */
 int16_t LWM2MObject::addResource( LWM2MResource* p_res )
 {
-	/* Set this as the parent of the resource */
-	p_res->setParent( this );
+    /* Set this as the parent of the resource */
+    p_res->setParent( this );
 
-	/* add the resource to the list */
-	m_resVect.push_back( p_res );
+    /* add the resource to the list */
+    m_resVect.push_back( p_res );
 
     return 0;
 

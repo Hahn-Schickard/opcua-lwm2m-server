@@ -49,19 +49,19 @@
 */
 int32_t LWM2MDevice::getLifetime( void )
 {
-	lwm2m_client_t* p_dev;
+    lwm2m_client_t* p_dev;
 
-	if( mp_srv == NULL )
-		return -1;
+    if( mp_srv == NULL )
+        return -1;
 
-	/* try to get the structure of the device from server */
-	p_dev = mp_srv->getDevice( m_name );
+    /* try to get the structure of the device from server */
+    p_dev = mp_srv->getDevice( m_name );
 
-	if( p_dev == NULL)
-		return -1;
+    if( p_dev == NULL)
+        return -1;
 
-	/* return the lifetime */
-	return p_dev->lifetime;
+    /* return the lifetime */
+    return p_dev->lifetime;
 
 } /* LWM2MObject::getLifetime() */
 
@@ -72,19 +72,19 @@ int32_t LWM2MDevice::getLifetime( void )
 */
 int32_t LWM2MDevice::getEndOfLife( void )
 {
-	lwm2m_client_t* p_dev;
+    lwm2m_client_t* p_dev;
 
-	if( mp_srv == NULL )
-		return -1;
+    if( mp_srv == NULL )
+        return -1;
 
-	/* try to get the structure of the device from server */
-	p_dev = mp_srv->getDevice( m_name );
+    /* try to get the structure of the device from server */
+    p_dev = mp_srv->getDevice( m_name );
 
-	if( p_dev == NULL)
-		return -1;
+    if( p_dev == NULL)
+        return -1;
 
-	/* return the lifetime */
-	return p_dev->endOfLife;
+    /* return the lifetime */
+    return p_dev->endOfLife;
 
 } /* LWM2MObject::getEndOfLife() */
 
@@ -95,11 +95,11 @@ int32_t LWM2MDevice::getEndOfLife( void )
 */
 int16_t LWM2MDevice::addObject( LWM2MObject* p_obj )
 {
-	/* Set this as the parent of the resource */
-	p_obj->setParent( this );
+    /* Set this as the parent of the resource */
+    p_obj->setParent( this );
 
-	/* add the resource to the list */
-	m_objVect.push_back( p_obj );
+    /* add the resource to the list */
+    m_objVect.push_back( p_obj );
 
     return 0;
 
