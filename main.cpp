@@ -21,6 +21,10 @@
 #include "LWM2MResource.h"
 #include "LWM2MResourceObserver.h"
 
+#ifdef OPCUA_LWM2M_SERVER_USE_THREAD
+#include <pthread.h>
+#endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
+
 
 class TestObserver
 		: public LWM2MResourceObserver
@@ -109,10 +113,13 @@ int main(int argc, char **argv)
 
 	uint32_t i = lwm2m_gettime();
 	int j = 12;
+
 	while( 1 )
 	{
+#ifndef OPCUA_LWM2M_SERVER_USE_THREAD
 		/* run the server instance */
 		p_srv->runServer();
+#endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
 
 		//std::cout << "Has Device:            " << p_srv->hasDevice( std::string("TestDevice") ) << std::endl;
 		//std::cout << "TestClient Lifetime:   " << p_dev->getLifetime() << std::endl;

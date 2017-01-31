@@ -45,6 +45,10 @@
 #include "connection.h"
 #include "LWM2MResourceObserver.h"
 
+#ifdef OPCUA_LWM2M_SERVER_USE_THREAD
+#include <pthread.h>
+#endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
+
 /*
  * --- Forward Declaration ----------------------------------------------------- *
  */
@@ -95,7 +99,21 @@ public:
 		, m_addrFam( AF_INET6 )
 		, mp_connList( NULL )
 		, mp_lwm2mH( NULL )
-		, mp_cbUserData( NULL ) {};
+		, mp_cbUserData( NULL ) {
+
+#ifdef OPCUA_LWM2M_SERVER_USE_THREAD
+		pthread_mutexattr_t attr;
+		pthread_mutexattr_init( &attr );
+		pthread_mutexattr_settype( &attr, PTHREAD_MUTEX_RECURSIVE );
+
+		/* initialize the mutex */
+		pthread_mutex_init( &m_mutex, &attr );
+
+		m_thread = -1;
+		m_threadRun = false;
+
+#endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
+	};
 
 
     /**
@@ -110,7 +128,21 @@ public:
 		, m_addrFam( AF_INET6 )
 		, mp_connList( NULL )
 		, mp_lwm2mH( NULL )
-		, mp_cbUserData( NULL ) {};
+		, mp_cbUserData( NULL ) {
+
+#ifdef OPCUA_LWM2M_SERVER_USE_THREAD
+		pthread_mutexattr_t attr;
+		pthread_mutexattr_init( &attr );
+		pthread_mutexattr_settype( &attr, PTHREAD_MUTEX_RECURSIVE );
+
+		/* initialize the mutex */
+		pthread_mutex_init( &m_mutex, &attr );
+
+		m_thread = -1;
+		m_threadRun = false;
+
+#endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
+	};
 
 
     /**
@@ -165,7 +197,7 @@ public:
 	 *
 	 * 	\return	true if the client is know.
 	 */
-	bool hasDevice( std::string client ) const;
+	bool hasDevice( std::string client );
 
 
 	/**
@@ -212,7 +244,7 @@ public:
 	 * \return 	0 on success or negative value on error.
 	 */
 	int8_t execute( const LWM2MResource* p_res,
-			s_cbparams_t* p_cbParams ) const;
+			s_cbparams_t* p_cbParams );
 
 
 protected:
@@ -227,7 +259,7 @@ protected:
 	 *
 	 * 	\return	Pointer to the device structure on success or NULL on error.
 	 */
-	lwm2m_client_t* getDevice( std::string client ) const;
+	lwm2m_client_t* getDevice( std::string client );
 
 
 private:
@@ -264,6 +296,20 @@ private:
 			lwm2m_media_type_t format, uint8_t * data, int dataLength,
 			void * userData );
 
+#ifdef OPCUA_LWM2M_SERVER_USE_THREAD
+
+	/**
+	 * \brief	Thread Function.
+	 */
+	static void* threadEntryFunc( void* p_arg ) {
+		/* run the Server */
+		int ret = 0;
+		while( (p_arg != NULL) && (ret == 0))
+			ret = ((LWM2MServer*)p_arg)->runServer();
+		return NULL;
+	}
+#endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
+
 
 private:
 
@@ -284,6 +330,17 @@ private:
 
     /** User data for notify call back */
     struct s_cbparams_t* mp_cbUserData;
+
+#ifdef OPCUA_LWM2M_SERVER_USE_THREAD
+    /** Mutex for Thread safe execution */
+    pthread_mutex_t m_mutex;
+
+    /** thread instance */
+    pthread_t m_thread;
+
+    /** indicate if to run thread */
+    bool m_threadRun;
+#endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
 };
 
 #endif /* #ifndef __LWM2MSERVER_H__ */
