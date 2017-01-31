@@ -161,7 +161,7 @@ public:
      *
      * \return     Parent object.
      */
-    const LWM2MServer* getServer( void ) const {return mp_srv;}
+    LWM2MServer* getServer( void ) const {return mp_srv;}
 
 private:
 
