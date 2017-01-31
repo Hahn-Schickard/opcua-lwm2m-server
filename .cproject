@@ -30,6 +30,7 @@
 								<option id="gnu.cpp.compiler.option.preprocessor.def.248668247" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="LWM2M_LITTLE_ENDIAN"/>
 									<listOptionValue builtIn="false" value="LWM2M_SERVER_MODE"/>
+									<listOptionValue builtIn="false" value="OPCUA_LWM2M_SERVER_USE_THREAD"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1768849567" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -42,13 +43,17 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/wakaama/examples/shared/tinydtls}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1450269269" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="LWM2M_LITTLE_ENDIAN"/>
 									<listOptionValue builtIn="false" value="LWM2M_SERVER_MODE"/>
+									<listOptionValue builtIn="false" value="LWM2M_LITTLE_ENDIAN"/>
+									<listOptionValue builtIn="false" value="OPCUA_LWM2M_SERVER_USE_THREAD"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.540906925" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1967716506" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1677293651" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
+								<option id="gnu.cpp.link.option.libs.1014669134" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="pthread"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1468783773" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
