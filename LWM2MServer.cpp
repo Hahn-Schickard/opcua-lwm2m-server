@@ -184,8 +184,8 @@ int16_t LWM2MServer::runServer( void )
     FD_ZERO( &readfds );
     FD_SET( m_sock, &readfds );
 
-    tv.tv_sec = 2;
-    tv.tv_usec = 0;
+    tv.tv_sec = 0;
+    tv.tv_usec = 100000;
 
     OPCUA_LWM2M_SERVER_MUTEX_LOCK();
 
