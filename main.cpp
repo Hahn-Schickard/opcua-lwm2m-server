@@ -48,6 +48,7 @@ public:
 		}
 		std::cout << "**** Notification end   **** " << std::endl;
 
+		return 0;
 	}
 };
 
