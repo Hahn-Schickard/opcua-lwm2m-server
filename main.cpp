@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 	p_obj->addResource( p_res );
 	p_dev->addObject( p_obj );
 
-	p_obj = new LWM2MObject( 6, 0 );
+	p_obj = new LWM2MObject( 3, 0 );
 	p_res = new LWM2MResource( 9, true, true );
 	p_obj->addResource( p_res );
 	p_dev->addObject( p_obj );
