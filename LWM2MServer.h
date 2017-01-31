@@ -109,7 +109,7 @@ public:
         /* initialize the mutex */
         pthread_mutex_init( &m_mutex, &attr );
 
-        m_thread = -1;
+        m_thread = 0;
         m_threadRun = false;
 
 #endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
@@ -138,7 +138,7 @@ public:
         /* initialize the mutex */
         pthread_mutex_init( &m_mutex, &attr );
 
-        m_thread = -1;
+        m_thread = 0;
         m_threadRun = false;
 
 #endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */

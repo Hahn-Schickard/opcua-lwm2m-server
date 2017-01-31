@@ -128,10 +128,10 @@ int16_t LWM2MServer::stopServer( void )
     /* stop the server thread and wait */
     m_threadRun = false;
 
-    if( m_thread != -1 )
+    if( m_thread != -0 )
     {
         pthread_join(m_thread, NULL);
-        m_thread = -1;
+        m_thread = 0;
     }
 #endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
 
