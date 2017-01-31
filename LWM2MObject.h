@@ -103,7 +103,11 @@ public:
 
         /*delete all Objects */
         while( it != m_resVect.end() )
-            delete (*it)++;};
+        {
+            delete (*it);
+            it++;
+        }
+    };
 
 
     /**

@@ -89,7 +89,10 @@ public:
 
         /*delete all Objects */
         while( it != m_objVect.end() )
-            delete (*it)++;
+        {
+            delete (*it);
+            it++;
+        }
     };
 
 
