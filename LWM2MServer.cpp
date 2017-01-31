@@ -384,9 +384,9 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, std::string& val,
                 /* call the server */
                 runServer();
 #endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
-                status = p_cbData->lwm2mParams.status != NO_ERROR;
+                status = p_cbData->lwm2mParams.status;;
                 OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
-                if( p_cbData->lwm2mParams.status != NO_ERROR )
+                if( status != NO_ERROR )
                     break;
             }
 
@@ -497,9 +497,9 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
                 /* call the server */
                 runServer();
 #endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
-                status = p_cbData->lwm2mParams.status != NO_ERROR;
+                status = p_cbData->lwm2mParams.status;
                 OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
-                if( p_cbData->lwm2mParams.status != NO_ERROR )
+                if( status != NO_ERROR )
                     break;
             }
         }
