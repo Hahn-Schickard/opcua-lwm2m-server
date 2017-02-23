@@ -118,7 +118,7 @@ public:
      * \return     0 on success or negative value on error.
      */
     virtual int8_t notify( const LWM2MServer* p_srv, const LWM2MResource* p_res,
-            const s_lwm2m_resobsparams_t* p_params ) const = 0;
+            const s_lwm2m_resobsparams_t* p_params ) = 0;
 
 };
 

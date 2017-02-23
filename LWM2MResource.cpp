@@ -45,13 +45,13 @@
 /*
 * LWM2MResource::startServer()
 */
-int8_t LWM2MResource::registerObserver( const LWM2MResourceObserver* p_observer )
+int8_t LWM2MResource::registerObserver( LWM2MResourceObserver* p_observer )
 {
     if( p_observer == NULL )
         return -1;
 
     /* find the observer in the list */
-    std::vector< const LWM2MResourceObserver*>::iterator it =
+    std::vector< LWM2MResourceObserver*>::iterator it =
             m_vectObs.begin();
 
     while( it != m_vectObs.end() )
@@ -85,7 +85,7 @@ int8_t LWM2MResource::deregisterObserver( const LWM2MResourceObserver* p_observe
         return -1;
 
     /* find the observer in the list */
-    std::vector< const LWM2MResourceObserver*>::iterator it =
+    std::vector< LWM2MResourceObserver*>::iterator it =
             m_vectObs.begin();
 
     while( it != m_vectObs.end() )
@@ -115,7 +115,7 @@ int8_t LWM2MResource::deregisterObserver( const LWM2MResourceObserver* p_observe
 int8_t LWM2MResource::notifyObservers( const s_lwm2m_resobsparams_t* p_params ) const
 {
     /* Iterate through the observers in the list */
-    std::vector< const LWM2MResourceObserver*>::const_iterator it =
+    std::vector< LWM2MResourceObserver*>::const_iterator it =
              m_vectObs.begin();
 
     while( it != m_vectObs.end() )

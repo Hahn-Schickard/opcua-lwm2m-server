@@ -128,7 +128,7 @@ public:
      *
      * \return     0 on success or negative value on error.
      */
-    int8_t registerObserver( const LWM2MResourceObserver* p_observer );
+    int8_t registerObserver( LWM2MResourceObserver* p_observer );
 
 
     /**
@@ -181,7 +181,7 @@ private:
     const LWM2MObject* mp_parent;
 
     /** Vector of registed observer */
-    std::vector< const LWM2MResourceObserver* > m_vectObs;
+    std::vector< LWM2MResourceObserver* > m_vectObs;
 
 };
 
