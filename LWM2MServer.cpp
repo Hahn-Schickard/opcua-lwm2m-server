@@ -64,6 +64,28 @@
 
 /*---------------------------------------------------------------------------*/
 /*
+* LWM2MServer::~LWM2MServer()
+*/
+LWM2MServer::~LWM2MServer( void )
+{
+    /* stop running server */
+    stopServer();
+
+    /* delete devices */
+    std::map< std::string, LWM2MDevice* >::iterator it = m_devMap.begin();
+
+    /*delete all Objects */
+    while( it != m_devMap.end() )
+    {
+        delete (it->second);
+        it++;
+    }
+
+} /* LWM2MServer::~LWM2MServer() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
 * LWM2MServer::startServer()
 */
 int16_t LWM2MServer::startServer( void )
@@ -99,7 +121,7 @@ int16_t LWM2MServer::startServer( void )
             ret = -3;
 
         /* register monitoring callback */
-        lwm2m_set_monitoring_callback( mp_lwm2mH, notifyCb, mp_cbUserData );
+        lwm2m_set_monitoring_callback( mp_lwm2mH, monitorCb, this );
     }
 
     OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
@@ -652,6 +674,103 @@ lwm2m_client_t* LWM2MServer::getDevice( std::string client )
     return NULL;
 
 } /* LWM2MServer::getDevice() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::monitorCb()
+*/
+void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+        lwm2m_media_type_t format, uint8_t * data, int dataLength,
+        void * userData )
+{
+    int ret = 0;
+
+    LWM2MServer* p_srv = (LWM2MServer*)userData;
+    lwm2m_context_t* lwm2mH = p_srv->mp_lwm2mH;
+    lwm2m_client_t* targetP;
+    lwm2m_client_object_t * objectP;
+
+    switch( status )
+    {
+    case COAP_201_CREATED:
+
+        /* A new client was registered */
+        targetP = (lwm2m_client_t *)lwm2m_list_find((lwm2m_list_t *)lwm2mH->clientList, clientID);
+        if( targetP == NULL )
+          ret = -1;
+
+        if( ret == 0 )
+        {
+          /* check the map for an existing device with the same name */
+          if( p_srv->m_devMap.find( targetP->name ) != p_srv->m_devMap.end())
+            ret = -1;
+        }
+
+        if( ret == 0 )
+        {
+          /* create a new device and add it to the list */
+          LWM2MDevice* p_dev = new LWM2MDevice( targetP->name, p_srv );
+
+          /* add all objects registered at the device */
+          for (objectP = targetP->objectList; objectP != NULL ; objectP = objectP->next)
+          {
+            /* objects without instances are not supported */
+            if (objectP->instanceList != NULL)
+            {
+              /* iterate through all the instances and assign the found objects
+              * to the current device */
+              lwm2m_list_t * instanceP;
+
+              for (instanceP = objectP->instanceList; instanceP != NULL ;
+                  instanceP = instanceP->next)
+              {
+                /* create a new Object and add it to the device */
+                LWM2MObject* p_obj = new LWM2MObject( objectP->id, instanceP->id );
+                p_dev->addObject( p_obj );
+              }
+            }
+          }
+
+          /* add the device to the list */
+          p_srv->m_devMap.insert(
+              std::pair< std::string, LWM2MDevice* >( p_dev->getName(), p_dev ) );
+        }
+        break;
+
+    case COAP_202_DELETED:
+
+        /* An existing client was deleted. */
+        targetP = (lwm2m_client_t *)lwm2m_list_find((lwm2m_list_t *)lwm2mH->clientList,
+            clientID);
+        if( targetP == NULL )
+         ret = -1;
+
+        if( ret == 0 )
+        {
+          /* check the map for an existing device with the same name */
+          if( p_srv->m_devMap.find( targetP->name ) != p_srv->m_devMap.end())
+            ret = -1;
+        }
+
+        /* delete the device from the list */
+        p_srv->m_devMap.erase( p_srv->m_devMap.find( targetP->name ) );
+
+        break;
+
+    case COAP_204_CHANGED:
+
+        /* An existing client was updated. */
+        targetP = (lwm2m_client_t *)lwm2m_list_find((lwm2m_list_t *)lwm2mH->clientList,
+            clientID);
+        break;
+
+    default:
+        /* unhandled status */
+        break;
+    }
+
+};
 
 
 /*---------------------------------------------------------------------------*/

@@ -41,6 +41,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <string>
+#include <map>
 #include "liblwm2m.h"
 #include "connection.h"
 #include "LWM2MResourceObserver.h"
@@ -148,10 +149,7 @@ public:
     /**
      * \brief   Default Destructor of the LWM2M Server.
      */
-    virtual ~LWM2MServer( void ) {
-        /* stop running server */
-        stopServer();
-    };
+    virtual ~LWM2MServer( void );
 
 
     /**
@@ -247,6 +245,26 @@ public:
             s_cbparams_t* p_cbParams );
 
 
+    /**
+     * \brief    Get the begin of the registered devices.
+     *
+     * \return    Iterator pointing to the begin of the devices.
+     */
+    std::map< std::string, LWM2MDevice* >::iterator deviceStart( void ) {
+        return m_devMap.begin();
+    };
+
+
+    /**
+     * \brief    Get the end of the registered devices.
+     *
+     * \return    Iterator pointing to the end of the devices.
+     */
+    std::map< std::string, LWM2MDevice* >::iterator deviceEnd( void ) {
+        return m_devMap.end();
+    };
+
+
 protected:
 
     /**
@@ -278,10 +296,31 @@ private:
 
 
     /**
-     * \brief    Callback used to indicate if something happened.
+     * \brief    Callback used to indicate if any action happened for a client.
      *
-     *             This function indicates several events e.g. if a new
-     *             device was registered or if a monitored value changed.
+     *           This function indicates several events e.g. if a new
+     *           device was registered or deregistered.
+     *
+     * \param    clientID    The internal device ID of the monitored event.
+     * \param    uriP        The URI the event belongs to.
+     * \param    status        Status of the event.
+     * \param    format        Format of the data included.
+     * \param    data        Data that was included in the event.
+     * \param    dataLength    Length of the data.
+     * \param    userData    User data pointer specified when the function was
+     *                         registered.
+     */
+    static void monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+            lwm2m_media_type_t format, uint8_t * data, int dataLength,
+            void * userData );
+
+
+
+    /**
+     * \brief    Callback used to indicate e.g result of read write or observe.
+     *
+     *           This function indicates several events e.g. the result of
+     *           a read write or when observing a value.
      *
      * \param    clientID    The internal device ID of the monitored event.
      * \param    uriP        The URI the event belongs to.
@@ -330,6 +369,9 @@ private:
 
     /** User data for notify call back */
     struct s_cbparams_t* mp_cbUserData;
+
+    /** LWM2M Devices associated to the server */
+    std::map< std::string, LWM2MDevice* > m_devMap;
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
     /** Mutex for Thread safe execution */
