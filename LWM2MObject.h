@@ -145,6 +145,16 @@ public:
 
 
     /**
+     * \brief     Get a specific resource.
+     *
+     * \param     resID   ID of the resource.
+     *
+     * \return    Pointer to the resource if it exists or NULL otherwise.
+     */
+    LWM2MResource* getResource( uint16_t resID );
+
+
+    /**
      * \brief    Get the begin of the registered resources.
      *
      * \return    Iterator pointing to the begin of the resources.

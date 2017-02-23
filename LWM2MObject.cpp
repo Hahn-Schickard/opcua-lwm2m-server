@@ -60,3 +60,28 @@ int16_t LWM2MObject::addResource( LWM2MResource* p_res )
 } /* LWM2MObject::addResource() */
 
 
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MObject::getResource()
+*/
+LWM2MResource* LWM2MObject::getResource( uint16_t resID )
+{
+  LWM2MResource* ret = NULL;
+
+  std::vector< LWM2MResource* >::iterator it = resourceStart();
+  while( it != resourceEnd() )
+  {
+    if( (*it)->getResId() == resID )
+    {
+      ret = (*it);
+      break;
+    }
+
+    it++;
+  }
+
+  return ret;
+
+} /* LWM2MObject::getResource() */
+
+
