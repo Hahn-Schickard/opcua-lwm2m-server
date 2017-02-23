@@ -93,6 +93,32 @@ int32_t LWM2MDevice::getEndOfLife( void )
 /*
 * LWM2MDevice::addObject()
 */
+LWM2MObject* LWM2MDevice::getObject( uint16_t objID, uint8_t instID )
+{
+  LWM2MObject* ret = NULL;
+
+  std::vector< LWM2MObject* >::iterator it = objectStart();
+  while( it != objectEnd() )
+  {
+    if( ((*it)->getObjId() == objID) && ((*it)->getInstId() == instID) )
+    {
+      ret = (*it);
+      break;
+    }
+
+    it++;
+  }
+
+  return ret;
+
+} /* LWM2MObject::getObject() */
+
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MDevice::addObject()
+*/
 int16_t LWM2MDevice::addObject( LWM2MObject* p_obj )
 {
     /* Set this as the parent of the resource */

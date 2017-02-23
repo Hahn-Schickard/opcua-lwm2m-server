@@ -65,6 +65,7 @@ class LWM2MServer;
 class LWM2MDevice
 {
     friend class LWM2MObject;
+    friend class LWM2MServer;
 
 public:
 
@@ -127,13 +128,14 @@ public:
 
 
     /**
-     * \brief    Add a new object to the list.
+     * \brief     Get a specific object.
      *
-     * \param    p_obj        Object to add.
+     * \param     objID   ID of the object.
+     * \param     instID  ID of the instance of the object.
      *
-     * \return    0 on success or negative value on error.
+     * \return    Pointer to the object if it exists or NULL otherwise.
      */
-    int16_t addObject( LWM2MObject* p_obj );
+    LWM2MObject* getObject( uint16_t objID, uint8_t instID );
 
 
     /**
@@ -162,6 +164,18 @@ public:
      * \return     Parent object.
      */
     LWM2MServer* getServer( void ) const {return mp_srv;}
+
+
+protected:
+
+    /**
+     * \brief    Add a new object to the list.
+     *
+     * \param    p_obj        Object to add.
+     *
+     * \return    0 on success or negative value on error.
+     */
+    int16_t addObject( LWM2MObject* p_obj );
 
 private:
 
