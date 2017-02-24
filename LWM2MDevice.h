@@ -98,50 +98,50 @@ public:
 
 
     /**
-     * \brief    Get the object ID,
+     * \brief   Get the object ID,
      *
-     * \return     Name of the device.
+     * \return  Name of the device.
      */
     std::string getName( void ) const {return m_name;}
 
 
     /**
-     * \brief    Get the lifetime of the device.
+     * \brief   Get the lifetime of the device.
      *
-     *             Each device has a lifetime. If there was no communication
-     *             within that time the device is removed from the server.
+     *          Each device has a lifetime. If there was no communication
+     *          within that time the device is removed from the server.
      *
-     * \return    The lifetime on success or a negative value on error.
+     * \return  The lifetime on success or a negative value on error.
      */
     int32_t getLifetime( void );
 
 
     /**
-     * \brief    Get the end of life of the device.
+     * \brief   Get the end of life of the device.
      *
-     *             Each device has a lifetime. If there was no communication
-     *             within that time the device is removed from the server.
+     *          Each device has a lifetime. If there was no communication
+     *          within that time the device is removed from the server.
      *
-     * \return    The end of life on success or a negative value on error.
+     * \return  The end of life on success or a negative value on error.
      */
     int32_t getEndOfLife( void );
 
 
     /**
-     * \brief     Get a specific object.
+     * \brief   Get a specific object.
      *
-     * \param     objID   ID of the object.
-     * \param     instID  ID of the instance of the object.
+     * \param   objID   ID of the object.
+     * \param   instID  ID of the instance of the object.
      *
-     * \return    Pointer to the object if it exists or NULL otherwise.
+     * \return  Pointer to the object if it exists or NULL otherwise.
      */
     LWM2MObject* getObject( uint16_t objID, uint8_t instID );
 
 
     /**
-     * \brief    Get the begin of the registered objects.
+     * \brief   Get the begin of the registered objects.
      *
-     * \return    Iterator pointing to the begin of the objects.
+     * \return  Iterator pointing to the begin of the objects.
      */
     std::vector< LWM2MObject* >::iterator objectStart( void ) {
         return m_objVect.begin();
@@ -149,9 +149,9 @@ public:
 
 
     /**
-     * \brief    Get the end of the registered objects.
+     * \brief   Get the end of the registered objects.
      *
-     * \return    Iterator pointing to the end of the objects.
+     * \return  Iterator pointing to the end of the objects.
      */
     std::vector< LWM2MObject* >::iterator objectEnd( void ) {
         return m_objVect.end();
@@ -159,9 +159,9 @@ public:
 
 
     /**
-     * \brief    Get the associated server object.
+     * \brief   Get the associated server object.
      *
-     * \return     Parent object.
+     * \return  Parent object.
      */
     LWM2MServer* getServer( void ) const {return mp_srv;}
 
@@ -169,11 +169,11 @@ public:
 protected:
 
     /**
-     * \brief    Add a new object to the list.
+     * \brief   Add a new object to the list.
      *
-     * \param    p_obj        Object to add.
+     * \param   p_obj  Object to add.
      *
-     * \return    0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int16_t addObject( LWM2MObject* p_obj );
 

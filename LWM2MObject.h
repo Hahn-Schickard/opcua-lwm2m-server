@@ -111,53 +111,53 @@ public:
 
 
     /**
-     * \brief    Get the object ID,
+     * \brief   Get the object ID,
      *
-     * \return     Object ID.
+     * \return  Object ID.
      */
     int16_t getObjId( void ) const {return m_objId;}
 
 
     /**
-     * \brief    Get the instance ID,
+     * \brief   Get the instance ID,
      *
-     * \return     Instance ID.
+     * \return  Instance ID.
      */
     int16_t getInstId( void ) const {return m_instId;}
 
 
     /**
-     * \brief    Get the parent object.
+     * \brief   Get the parent object.
      *
-     * \return     Parent object.
+     * \return  Parent object.
      */
     const LWM2MDevice* getParent( void ) const {return mp_parent;}
 
 
     /**
-     * \brief    Add a new resource to the list.
+     * \brief   Add a new resource to the list.
      *
-     * \param    p_res        Resource to add.
+     * \param   p_res   Resource to add.
      *
-     * \return    0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int16_t addResource( LWM2MResource* p_res );
 
 
     /**
-     * \brief     Get a specific resource.
+     * \brief   Get a specific resource.
      *
-     * \param     resID   ID of the resource.
+     * \param   resID   ID of the resource.
      *
-     * \return    Pointer to the resource if it exists or NULL otherwise.
+     * \return  Pointer to the resource if it exists or NULL otherwise.
      */
     LWM2MResource* getResource( uint16_t resID );
 
 
     /**
-     * \brief    Get the begin of the registered resources.
+     * \brief   Get the begin of the registered resources.
      *
-     * \return    Iterator pointing to the begin of the resources.
+     * \return  Iterator pointing to the begin of the resources.
      */
     std::vector< LWM2MResource* >::iterator resourceStart( void ) {
         return m_resVect.begin();
@@ -165,9 +165,9 @@ public:
 
 
     /**
-     * \brief    Get the end of the registered resources.
+     * \brief   Get the end of the registered resources.
      *
-     * \return    Iterator pointing to the end of the resources.
+     * \return  Iterator pointing to the end of the resources.
      */
     std::vector< LWM2MResource* >::iterator resourceEnd( void ) {
         return m_resVect.end();
@@ -177,9 +177,9 @@ protected:
 
 
     /**
-     * \brief    Set the parent object.
+     * \brief   Set the parent object.
      *
-     * \param     Parent object.
+     * \param   Parent object.
      */
     void setParent( const LWM2MDevice* p_parent ) {mp_parent = p_parent;};
 

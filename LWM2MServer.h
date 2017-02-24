@@ -153,102 +153,102 @@ public:
 
 
     /**
-     * \brief    Start the LWM2M Server.
+     * \brief   Start the LWM2M Server.
      *
-     *             Must be called in order to start the LWM2M Server. It creates
-     *             the according socket connections and starts the LWM2M context.
-     *             Existing connections will be closed.
+     *          Must be called in order to start the LWM2M Server. It creates
+     *          the according socket connections and starts the LWM2M context.
+     *          Existing connections will be closed.
      *
-     * \return     0 on success.
+     * \return  0 on success.
      */
     int16_t startServer( void );
 
 
     /**
-     * \brief    Stop the LWM2M Server.
+     * \brief   Stop the LWM2M Server.
      *
-     *             Closes existing socket connections and deletes active LWM2M
-     *             contexts.
+     *          Closes existing socket connections and deletes active LWM2M
+     *          contexts.
      *
-     * \return    0 on success.
+     * \return  0 on success.
      */
     int16_t stopServer( void );
 
 
     /**
-     * \brief    Run the LWM2M Server.
+     * \brief   Run the LWM2M Server.
      *
-     *             This function must be called periodically. It checks the open
-     *             connection for data and handles LWM2M specific parts.
+     *          This function must be called periodically. It checks the open
+     *          connection for data and handles LWM2M specific parts.
      *
-     * \return    0 on success.
+     * \return  0 on success.
      */
     int16_t runServer( void );
 
 
     /**
-     * \brief    Checks if the server has a client with a specific name.
+     * \brief   Checks if the server has a client with a specific name.
      *
-     *             Any client that registers at the server is known as long
-     *             as its lifetime is not expired. Therefore, this function
-     *             returns true as long as a client is valid.
+     *          Any client that registers at the server is known as long
+     *          as its lifetime is not expired. Therefore, this function
+     *          returns true as long as a client is valid.
      *
-     *     \return    true if the client is know.
+     * \return  true if the client is know.
      */
     bool hasDevice( std::string client );
 
 
     /**
-     * \brief    Read a resources value.
+     * \brief   Read a resources value.
      *
-     * \param    p_res    The resource to read the value from.
-     * \param    val        Value reference to write the value to.
+     * \param   p_res The resource to read the value from.
+     * \param   val   Value reference to write the value to.
      *
-     * \return     0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int8_t read( const LWM2MResource* p_res, std::string& val,
             s_cbparams_t* p_cbParams );
 
 
     /**
-     * \brief    Write a resources value.
+     * \brief   Write a resources value.
      *
-     * \param    p_res    The resource to write the value to.
-     * \param    val        Value to set for the resource.
+     * \param   p_res   The resource to write the value to.
+     * \param   val     Value to set for the resource.
      *
-     * \return     0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int8_t write( const LWM2MResource* p_res, const std::string& val,
             s_cbparams_t* p_cbParams );
 
 
     /**
-     * \brief    Observe a resources value.
+     * \brief   Observe a resources value.
      *
-     * \param    p_res    The resource to observe.
-     * \param    observe    Defines if the value shall be observed or not.
+     * \param   p_res     The resource to observe.
+     * \param   observe   Defines if the value shall be observed or not.
      *
-     * \return     0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int8_t observe( const LWM2MResource* p_res, bool observe,
             s_cbparams_t* p_cbParams );
 
 
     /**
-     * \brief    Execute a resource.
+     * \brief   Execute a resource.
      *
-     * \param    p_res    The resource to execute.
+     * \param   p_res   The resource to execute.
      *
-     * \return     0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int8_t execute( const LWM2MResource* p_res,
             s_cbparams_t* p_cbParams );
 
 
     /**
-     * \brief    Get the begin of the registered devices.
+     * \brief   Get the begin of the registered devices.
      *
-     * \return    Iterator pointing to the begin of the devices.
+     * \return  Iterator pointing to the begin of the devices.
      */
     std::map< std::string, LWM2MDevice* >::iterator deviceStart( void ) {
         return m_devMap.begin();
@@ -256,9 +256,9 @@ public:
 
 
     /**
-     * \brief    Get the end of the registered devices.
+     * \brief   Get the end of the registered devices.
      *
-     * \return    Iterator pointing to the end of the devices.
+     * \return  Iterator pointing to the end of the devices.
      */
     std::map< std::string, LWM2MDevice* >::iterator deviceEnd( void ) {
         return m_devMap.end();
@@ -268,14 +268,14 @@ public:
 protected:
 
     /**
-     * \brief    Get the device structure of a specific device.
+     * \brief   Get the device structure of a specific device.
      *
-     *             The LWM2M server class is a wrapper around the actual
-     *             LWM2M implementation. This function returns the original
-     *             structure of a LWM2M device from the LWM2M implementation
-     *             point f view.
+     *          The LWM2M server class is a wrapper around the actual
+     *          LWM2M implementation. This function returns the original
+     *          structure of a LWM2M device from the LWM2M implementation
+     *          point f view.
      *
-     *     \return    Pointer to the device structure on success or NULL on error.
+     * \return  Pointer to the device structure on success or NULL on error.
      */
     lwm2m_client_t* getDevice( std::string client );
 
@@ -283,12 +283,12 @@ protected:
 private:
 
     /**
-     * \brief    Checks if the server is running.
+     * \brief   Checks if the server is running.
      *
-     *             This functions uses the internal variables such as the
-     *             socket and LWM2M context to check if the server is alive.
+     *          This functions uses the internal variables such as the
+     *          socket and LWM2M context to check if the server is alive.
      *
-     *     \return    true if the server is alive.
+     * \return  true if the server is alive.
      */
     bool isAlive( void ) const {
         return ( (m_sock != -1) && (mp_lwm2mH != NULL) );
@@ -296,19 +296,19 @@ private:
 
 
     /**
-     * \brief    Callback used to indicate if any action happened for a client.
+     * \brief   Callback used to indicate if any action happened for a client.
      *
-     *           This function indicates several events e.g. if a new
-     *           device was registered or deregistered.
+     *          This function indicates several events e.g. if a new
+     *          device was registered or deregistered.
      *
-     * \param    clientID    The internal device ID of the monitored event.
-     * \param    uriP        The URI the event belongs to.
-     * \param    status        Status of the event.
-     * \param    format        Format of the data included.
-     * \param    data        Data that was included in the event.
-     * \param    dataLength    Length of the data.
-     * \param    userData    User data pointer specified when the function was
-     *                         registered.
+     * \param   clientID    The internal device ID of the monitored event.
+     * \param   uriP        The URI the event belongs to.
+     * \param   status      Status of the event.
+     * \param   format      Format of the data included.
+     * \param   data        Data that was included in the event.
+     * \param   dataLength  Length of the data.
+     * \param   userData    User data pointer specified when the function was
+     *                      registered.
      */
     static void monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
             lwm2m_media_type_t format, uint8_t * data, int dataLength,
@@ -317,19 +317,19 @@ private:
 
 
     /**
-     * \brief    Callback used to indicate e.g result of read write or observe.
+     * \brief   Callback used to indicate e.g result of read write or observe.
      *
-     *           This function indicates several events e.g. the result of
-     *           a read write or when observing a value.
+     *          This function indicates several events e.g. the result of
+     *          a read write or when observing a value.
      *
-     * \param    clientID    The internal device ID of the monitored event.
-     * \param    uriP        The URI the event belongs to.
-     * \param    status        Status of the event.
-     * \param    format        Format of the data included.
-     * \param    data        Data that was included in the event.
-     * \param    dataLength    Length of the data.
-     * \param    userData    User data pointer specified when the function was
-     *                         registered.
+     * \param   clientID    The internal device ID of the monitored event.
+     * \param   uriP        The URI the event belongs to.
+     * \param   status      Status of the event.
+     * \param   format      Format of the data included.
+     * \param   data        Data that was included in the event.
+     * \param   dataLength  Length of the data.
+     * \param   userData    User data pointer specified when the function was
+     *                      registered.
      */
     static void notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
             lwm2m_media_type_t format, uint8_t * data, int dataLength,
@@ -338,7 +338,7 @@ private:
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
 
     /**
-     * \brief    Thread Function.
+     * \brief   Thread Function.
      */
     static void* threadEntryFunc( void* p_arg ) {
         /* run the Server */

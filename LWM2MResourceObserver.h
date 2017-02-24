@@ -109,13 +109,13 @@ public:
 
 
     /**
-     * \brief    Get the resource ID.
+     * \brief   Get the resource ID.
      *
-     * \param    p_srv        The server the notification is from.
-     * \param    p_res        The resource the notification is for.
-     * \param    p_params    Parameters of the notification.
+     * \param   p_srv     The server the notification is from.
+     * \param   p_res     The resource the notification is for.
+     * \param   p_params  Parameters of the notification.
      *
-     * \return     0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     virtual int8_t notify( const LWM2MServer* p_srv, const LWM2MResource* p_res,
             const s_lwm2m_resobsparams_t* p_params ) = 0;

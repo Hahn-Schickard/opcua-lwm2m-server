@@ -102,44 +102,44 @@ public:
 
 
     /**
-     * \brief    Get the resource ID.
+     * \brief   Get the resource ID.
      *
-     * \return     Resource ID.
+     * \return  Resource ID.
      */
     int16_t getResId( void ) const {return m_resId;}
 
 
     /**
-     * \brief    Get the parent object.
+     * \brief   Get the parent object.
      *
-     * \return     Parent object.
+     * \return  Parent object.
      */
     const LWM2MObject* getParent( void ) const {return mp_parent;}
 
 
     /**
-     * \brief    Register an observer at the resource.
+     * \brief   Register an observer at the resource.
      *
-     *             An observer that is registered at the resource will be
-     *             notified about every event (e.g. value changed) of
-     *             the resource.
+     *          An observer that is registered at the resource will be
+     *          notified about every event (e.g. value changed) of
+     *          the resource.
      *
-     * \param    p_observer    Observer that shall be registered.
+     * \param   p_observer  Observer that shall be registered.
      *
-     * \return     0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int8_t registerObserver( LWM2MResourceObserver* p_observer );
 
 
     /**
-     * \brief    Deregister a registered Observer at the resource.
+     * \brief   Deregister a registered Observer at the resource.
      *
-     *             An observer that is deregistered at the resource will be
-     *             deleted from the list and will not receive any notifications.
+     *          An observer that is deregistered at the resource will be
+     *          deleted from the list and will not receive any notifications.
      *
-     * \param    p_observer    Observer that shall be deregistered.
+     * \param   p_observer  Observer that shall be deregistered.
      *
-     * \return     0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int8_t deregisterObserver( const LWM2MResourceObserver* p_observer );
 
@@ -147,27 +147,27 @@ public:
 protected:
 
     /**
-     * \brief    Set the parent object.
+     * \brief   Set the parent object.
      *
-     * \param     Parent object.
+     * \param   p_parent  Parent object.
      */
     void setParent( const LWM2MObject* p_parent ) {mp_parent = p_parent;};
 
 
     /**
-     * \brief    Check if the resource has observers.
+     * \brief   Check if the resource has observers.
      *
-     * \return     True if the resource has observers of fals otherwise.
+     * \return  True if the resource has observers of false otherwise.
      */
     bool hasObserver( void ) const { return m_vectObs.size(); };
 
 
     /**
-     * \brief    Notify all observers about a change in the resource.
+     * \brief   Notify all observers about a change in the resource.
      *
-     * \param    p_params    LWM2M parameters of the notification.
+     * \param   p_params  LWM2M parameters of the notification.
      *
-     * \return    0 on success or negative value on error.
+     * \return  0 on success or negative value on error.
      */
     int8_t notifyObservers( const s_lwm2m_resobsparams_t* p_params ) const;
 
