@@ -645,6 +645,73 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
 
 /*---------------------------------------------------------------------------*/
 /*
+* LWM2MServer::registerObserver()
+*/
+int8_t LWM2MServer::registerObserver( LWM2MServerObserver* p_observer )
+{
+    if( p_observer == NULL )
+        return -1;
+
+    /* find the observer in the list */
+    std::vector< LWM2MServerObserver*>::iterator it =
+            m_vectObs.begin();
+
+    while( it != m_vectObs.end() )
+    {
+        if( *it == p_observer )
+            /* found observer */
+            break;
+        it++;
+    }
+
+
+    if( it == m_vectObs.end() )
+    {
+        /* The observer was not found so it has to be added. */
+        m_vectObs.push_back( p_observer );
+    }
+
+    return 0;
+
+} /* LWM2MResource::registerObserver() */
+
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::deregisterObserver()
+*/
+int8_t LWM2MServer::deregisterObserver( const LWM2MServerObserver* p_observer )
+{
+    if( p_observer == NULL )
+        return -1;
+
+    /* find the observer in the list */
+    std::vector< LWM2MServerObserver*>::iterator it =
+            m_vectObs.begin();
+
+    while( it != m_vectObs.end() )
+    {
+        if( *it == p_observer )
+            /* found observer */
+            break;
+        it++;
+    }
+
+
+    if( it != m_vectObs.end() )
+    {
+        /* The observer was not found so it has to be added. */
+        m_vectObs.erase( it );
+    }
+
+    return 0;
+
+} /* LWM2MResource::deregisterObserver() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
 * LWM2MServer::getDevice()
 */
 lwm2m_client_t* LWM2MServer::getDevice( std::string client )
@@ -678,6 +745,28 @@ lwm2m_client_t* LWM2MServer::getDevice( std::string client )
 
 /*---------------------------------------------------------------------------*/
 /*
+* LWM2MServer::notifyObservers()
+*/
+int8_t LWM2MServer::notifyObservers( const LWM2MDevice* p_dev,
+    e_lwm2m_serverobserver_event_t ev ) const
+{
+    /* Iterate through the observers in the list */
+    std::vector< LWM2MServerObserver*>::const_iterator it =
+             m_vectObs.begin();
+
+    while( it != m_vectObs.end() )
+    {
+        /* notify the current observer */
+        (*it)->notify( p_dev, ev );
+        it++;
+    }
+
+    return 0;
+} /* LWM2MServer::notifyObservers() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
 * LWM2MServer::monitorCb()
 */
 void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
@@ -690,6 +779,8 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
     lwm2m_context_t* lwm2mH = p_srv->mp_lwm2mH;
     lwm2m_client_t* targetP;
     lwm2m_client_object_t * objectP;
+
+    std::map< std::string, LWM2MDevice* >::iterator it;
 
     switch( status )
     {
@@ -735,6 +826,9 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
           /* add the device to the list */
           p_srv->m_devMap.insert(
               std::pair< std::string, LWM2MDevice* >( p_dev->getName(), p_dev ) );
+
+          /* Notify all Observers */
+          p_srv->notifyObservers( p_dev, e_lwm2m_serverobserver_event_register );
         }
         break;
 
@@ -748,13 +842,18 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
 
         if( ret == 0 )
         {
+          it = p_srv->m_devMap.find( targetP->name );
           /* check the map for an existing device with the same name */
-          if( p_srv->m_devMap.find( targetP->name ) != p_srv->m_devMap.end())
+          if( it != p_srv->m_devMap.end())
             ret = -1;
         }
 
+        /* Notify all Observers */
+        p_srv->notifyObservers( it->second, e_lwm2m_serverobserver_event_deregister );
+
         /* delete the device from the list */
-        p_srv->m_devMap.erase( p_srv->m_devMap.find( targetP->name ) );
+        delete( it->second );
+        p_srv->m_devMap.erase( it );
 
         break;
 
@@ -763,6 +862,9 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         /* An existing client was updated. */
         targetP = (lwm2m_client_t *)lwm2m_list_find((lwm2m_list_t *)lwm2mH->clientList,
             clientID);
+
+        /** TODO */
+
         break;
 
     default:

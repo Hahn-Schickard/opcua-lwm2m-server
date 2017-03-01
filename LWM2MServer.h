@@ -41,10 +41,12 @@
 #include <stdint.h>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <map>
 #include "liblwm2m.h"
 #include "connection.h"
 #include "LWM2MResourceObserver.h"
+#include "LWM2MServerObserver.h"
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
 #include <pthread.h>
@@ -265,6 +267,32 @@ public:
     };
 
 
+    /**
+     * \brief   Register an observer.
+     *
+     *          An observer that is registered will be
+     *          notified about every event of any device.
+     *
+     * \param   p_observer  Observer that shall be registered.
+     *
+     * \return  0 on success or negative value on error.
+     */
+    int8_t registerObserver( LWM2MServerObserver* p_observer );
+
+
+    /**
+     * \brief   Deregister a registered Observer.
+     *
+     *          An observer that is deregistered at will be
+     *          deleted from the list and will not receive any notifications.
+     *
+     * \param   p_observer  Observer that shall be deregistered.
+     *
+     * \return  0 on success or negative value on error.
+     */
+    int8_t deregisterObserver( const LWM2MServerObserver* p_observer );
+
+
 protected:
 
     /**
@@ -278,6 +306,26 @@ protected:
      * \return  Pointer to the device structure on success or NULL on error.
      */
     lwm2m_client_t* getDevice( std::string client );
+
+
+    /**
+     * \brief   Check if the resource has observers.
+     *
+     * \return  True if the resource has observers of false otherwise.
+     */
+    bool hasObserver( void ) const { return m_vectObs.size(); };
+
+
+    /**
+     * \brief   Notify all observers about a change in the resource.
+     *
+     * \param   p_dev   Device the notification comes from.
+     * \param   ev      Type of notification.
+     *
+     * \return  0 on success or negative value on error.
+     */
+    int8_t notifyObservers( const LWM2MDevice* p_dev,
+        e_lwm2m_serverobserver_event_t ev ) const;
 
 
 private:
@@ -372,6 +420,9 @@ private:
 
     /** LWM2M Devices associated to the server */
     std::map< std::string, LWM2MDevice* > m_devMap;
+
+    /** Vector of registered observer */
+    std::vector< LWM2MServerObserver* > m_vectObs;
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
     /** Mutex for Thread safe execution */
