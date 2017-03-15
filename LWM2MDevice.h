@@ -72,9 +72,10 @@ public:
     /**
      * \brief   Default constructor to create a LWM2M Object.
      */
-    LWM2MDevice( std::string name, LWM2MServer* p_srv )
+    LWM2MDevice( std::string name, uint16_t id, LWM2MServer* p_srv )
         : m_name( name )
-        , mp_srv( p_srv ) {
+        , m_id( id )
+        , mp_srv( p_srv ){
 
         /* clear object vector */
         m_objVect.clear();
@@ -98,11 +99,19 @@ public:
 
 
     /**
-     * \brief   Get the object ID,
+     * \brief   Get the name of the device.
      *
      * \return  Name of the device.
      */
     std::string getName( void ) const {return m_name;}
+
+
+    /**
+     * \brief   Get the internal ID of the device.
+     *
+     * \return  Internal of the device.
+     */
+    uint16_t getID( void ) const {return m_id;}
 
 
     /**
@@ -181,6 +190,9 @@ private:
 
     /** Name of the device */
     std::string m_name;
+
+    /** ID of the device */
+    uint16_t m_id;
 
     /** Vector of resources */
     std::vector< LWM2MObject* > m_objVect;

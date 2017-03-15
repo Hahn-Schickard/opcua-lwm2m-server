@@ -801,7 +801,8 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         if( ret == 0 )
         {
           /* create a new device and add it to the list */
-          LWM2MDevice* p_dev = new LWM2MDevice( targetP->name, p_srv );
+          LWM2MDevice* p_dev = new LWM2MDevice( targetP->name,
+              targetP->internalID, p_srv );
 
           /* add all objects registered at the device */
           for (objectP = targetP->objectList; objectP != NULL ; objectP = objectP->next)
