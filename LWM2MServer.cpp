@@ -836,25 +836,28 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
     case COAP_202_DELETED:
 
         /* An existing client was deleted. */
-        targetP = (lwm2m_client_t *)lwm2m_list_find((lwm2m_list_t *)lwm2mH->clientList,
-            clientID);
-        if( targetP == NULL )
-         ret = -1;
+        it = p_srv->m_devMap.begin();
+        while( it != p_srv->m_devMap.end() )
+        {
+          if( it->second->getID() == clientID )
+            /* found matching ID */
+            break;
+          it++;
+        }
+
+        /* check the map for an existing device with the same name */
+        if( it == p_srv->m_devMap.end())
+          ret = -1;
 
         if( ret == 0 )
         {
-          it = p_srv->m_devMap.find( targetP->name );
-          /* check the map for an existing device with the same name */
-          if( it != p_srv->m_devMap.end())
-            ret = -1;
+          /* Notify all Observers */
+          p_srv->notifyObservers( it->second, e_lwm2m_serverobserver_event_deregister );
+
+          /* delete the device from the list */
+          delete( it->second );
+          p_srv->m_devMap.erase( it );
         }
-
-        /* Notify all Observers */
-        p_srv->notifyObservers( it->second, e_lwm2m_serverobserver_event_deregister );
-
-        /* delete the device from the list */
-        delete( it->second );
-        p_srv->m_devMap.erase( it );
 
         break;
 
