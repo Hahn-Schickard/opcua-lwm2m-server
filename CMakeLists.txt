@@ -26,7 +26,7 @@ SET(SOURCES
   ${PROJECT_SOURCE_DIR}/../../niki/opcua-lwm2m-server/LWM2MServer.cpp
 )
 
-add_library(OpcUalwm2m ${SHARED_SOURCES} ${SOURCES} ${WAKAAMA_SOURCES})
+add_library(OpcUalwm2m SHARED ${SHARED_SOURCES} ${SOURCES} ${WAKAAMA_SOURCES})
 
 target_link_libraries(
     OpcUalwm2m
