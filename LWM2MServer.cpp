@@ -415,7 +415,8 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, std::string& val,
             if( (p_cbData->lwm2mParams.status == CONTENT_2_05) &&
                     (p_cbData->lwm2mParams.format == LWM2M_CONTENT_TEXT))
             {
-                val = std::string((char*)p_cbData->lwm2mParams.data);
+                val = std::string((char*)p_cbData->lwm2mParams.data,
+                    p_cbData->lwm2mParams.dataLength);
                 ret = 0;
             }
             else
