@@ -384,6 +384,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
                 LWM2M_URI_FLAG_RESOURCE_ID;
 
         p_cbData->p_res = p_res;
+        p_cbData->lwm2mParams.dataLen = 1;
         p_cbData->lwm2mParams.status = NO_ERROR;
         lwm2mRet = lwm2m_dm_read( mp_lwm2mH, p_cli->internalID, &uri, notifyCb, p_cbData);
 
@@ -412,15 +413,15 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
                     break;
             }
 
-            if( (p_cbData->lwm2mParams.status == CONTENT_2_05) &&
-                    (p_cbData->lwm2mParams.format == LWM2M_CONTENT_TEXT))
+            if( p_cbData->lwm2mParams.status == CONTENT_2_05)
             {
-                val = std::string((char*)p_cbData->lwm2mParams.data,
-                    p_cbData->lwm2mParams.dataLength);
-                ret = 0;
+                *val = p_cbData->lwm2mParams.data;
+                ret = p_cbData->lwm2mParams.dataLen;
             }
             else
                 ret = -1;
+
+            p_cbData->lwm2mParams.dataLen = 0;
         }
         else
         {
@@ -888,20 +889,81 @@ void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         lwm2m_media_type_t format, uint8_t * data, int dataLength,
         void * userData )
 {
+    int ret = 0;
+    lwm2m_data_t* p_lwm2mData;
     /* convert user data to server instance */
     s_cbparams_t* p_inst = (s_cbparams_t*)userData;
+
+    LWM2MServer* p_srv;
+    if( (p_inst != NULL) && (p_inst->p_res != NULL) &&
+        (p_inst->p_res->getParent() != NULL) &&
+        (p_inst->p_res->getParent()->getParent() != NULL) )
+        p_srv = p_inst->p_res->getParent()->getParent()->getServer();
+    else if( (p_inst != NULL) && (p_inst->p_obj != NULL) &&
+        (p_inst->p_obj->getParent() != NULL) )
+      p_srv = p_inst->p_obj->getParent()->getServer();
+
+    if( p_srv == NULL )
+      return;
+
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(p_srv);
 
     /* set LWM2M parameters */
     p_inst->lwm2mParams.clientID = clientID;
     p_inst->lwm2mParams.uriP = uriP;
     p_inst->lwm2mParams.status = status;
     p_inst->lwm2mParams.format = format;
-    p_inst->lwm2mParams.data = data;
-    p_inst->lwm2mParams.dataLength = dataLength;
+    p_inst->lwm2mParams.data = NULL;
+    p_inst->lwm2mParams.buffer = data;
+    p_inst->lwm2mParams.bufferLen = dataLength;
 
     if( p_inst->p_res != NULL )
-        /* call the notification */
-        p_inst->p_res->notifyObservers( &p_inst->lwm2mParams );
+    {
+        ret = lwm2m_data_parse( p_inst->lwm2mParams.uriP, p_inst->lwm2mParams.buffer,
+               p_inst->lwm2mParams.bufferLen, p_inst->lwm2mParams.format, &p_lwm2mData );
+
+        if( ret > 0 )
+          p_inst->lwm2mParams.data = p_lwm2mData;
+
+        if( !p_inst->lwm2mParams.dataLen )
+        {
+          /* call the notification */
+          p_inst->p_res->notifyObservers( &p_inst->lwm2mParams );
+          lwm2m_data_free(ret, p_lwm2mData);
+        }
+        else
+          p_inst->lwm2mParams.dataLen = ret;
+    }
+    else if( p_inst->p_obj != NULL )
+    {
+      ret = lwm2m_data_parse( p_inst->lwm2mParams.uriP, p_inst->lwm2mParams.buffer,
+             p_inst->lwm2mParams.bufferLen, p_inst->lwm2mParams.format, &p_lwm2mData );
+
+      /* Iterate through the resources and notify about the change of data */
+      std::vector< LWM2MResource* >::const_iterator it = p_inst->p_obj->resourceStart();
+      p_inst->lwm2mParams.buffer = NULL;
+      while( it != p_inst->p_obj->resourceEnd() )
+      {
+          lwm2m_data_t* p_lwm2mDataCur = p_lwm2mData;
+          for( int i = 0; i < ret; i++ )
+          {
+              if( p_lwm2mData->id == (*it)->getResId() )
+              {
+                  /* ID match */
+                  p_inst->lwm2mParams.data = p_lwm2mDataCur;
+                  /* notify */
+                  (*it)->notifyObservers( &p_inst->lwm2mParams );
+              }
+              p_lwm2mData++;
+          }
+          it++;
+      }
+
+      lwm2m_data_free(ret, p_lwm2mData);
+    }
+
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(p_srv);
+
 };
 
 

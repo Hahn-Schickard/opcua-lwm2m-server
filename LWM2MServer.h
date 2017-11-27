@@ -85,8 +85,11 @@ public:
      */
     struct s_cbparams_t
     {
-        /* pinter to the resource instance */
+        /* pointer to the object instance */
+        const LWM2MObject* p_obj;
+        /* pointer to the resource instance */
         const LWM2MResource* p_res;
+
         /* LWM2M parameters */
         s_lwm2m_resobsparams_t lwm2mParams;
     };
@@ -208,7 +211,7 @@ public:
      *
      * \return  0 on success or negative value on error.
      */
-    int8_t read( const LWM2MResource* p_res, std::string& val,
+    int8_t read( const LWM2MResource* p_res, lwm2m_data_t**,
             s_cbparams_t* p_cbParams );
 
 

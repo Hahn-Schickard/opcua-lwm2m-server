@@ -72,9 +72,13 @@ typedef struct
     /** Format of the included data */
     lwm2m_media_type_t format;
     /** Additional data (e.g. for a read) */
-    uint8_t * data;
+    lwm2m_data_t* data;
+    /* number of read data */
+    uint8_t dataLen;
+    /** Buffer */
+    uint8_t * buffer;
     /** Length of the data included */
-    int dataLength;
+    int bufferLen;
     /** Initial observe */
     bool obsInit;
 

@@ -159,7 +159,7 @@ public:
      *
      * \return  Iterator pointing to the begin of the resources.
      */
-    std::vector< LWM2MResource* >::iterator resourceStart( void ) {
+    std::vector< LWM2MResource* >::const_iterator resourceStart( void ) const {
         return m_resVect.begin();
     };
 
@@ -169,7 +169,7 @@ public:
      *
      * \return  Iterator pointing to the end of the resources.
      */
-    std::vector< LWM2MResource* >::iterator resourceEnd( void ) {
+    std::vector< LWM2MResource* >::const_iterator resourceEnd( void ) const {
         return m_resVect.end();
     };
 

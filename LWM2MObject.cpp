@@ -68,7 +68,7 @@ LWM2MResource* LWM2MObject::getResource( uint16_t resID )
 {
   LWM2MResource* ret = NULL;
 
-  std::vector< LWM2MResource* >::iterator it = resourceStart();
+  std::vector< LWM2MResource* >::const_iterator it = resourceStart();
   while( it != resourceEnd() )
   {
     if( (*it)->getResId() == resID )
