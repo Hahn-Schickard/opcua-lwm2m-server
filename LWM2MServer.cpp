@@ -49,11 +49,11 @@
 #define LWM2MSERVER_MAX_PACKET_SIZE         1500
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
-#define OPCUA_LWM2M_SERVER_MUTEX_LOCK()        pthread_mutex_lock( &m_mutex );
-#define OPCUA_LWM2M_SERVER_MUTEX_UNLOCK()    pthread_mutex_unlock( &m_mutex );
+#define OPCUA_LWM2M_SERVER_MUTEX_LOCK(a)        pthread_mutex_lock( &(a)->m_mutex );
+#define OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(a)      pthread_mutex_unlock( &(a)->m_mutex );
 #else
-#define OPCUA_LWM2M_SERVER_MUTEX_LOCK()
-#define OPCUA_LWM2M_SERVER_MUTEX_UNLOCK()
+#define OPCUA_LWM2M_SERVER_MUTEX_LOCK(a)
+#define OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(a)
 #endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
 
 
@@ -92,7 +92,7 @@ int16_t LWM2MServer::startServer( void )
 {
     int16_t ret = 0;
 
-    OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 
     /* stop running server before restarting */
     if( stopServer() != 0)
@@ -124,7 +124,7 @@ int16_t LWM2MServer::startServer( void )
         lwm2m_set_monitoring_callback( mp_lwm2mH, monitorCb, this );
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
     if( ret == 0 )
@@ -157,7 +157,7 @@ int16_t LWM2MServer::stopServer( void )
     }
 #endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
 
-    OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 
     if( mp_connList != NULL )
     {
@@ -186,7 +186,7 @@ int16_t LWM2MServer::stopServer( void )
         mp_cbUserData = NULL;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
 
     return 0;
 
@@ -209,7 +209,7 @@ int16_t LWM2MServer::runServer( void )
     tv.tv_sec = 0;
     tv.tv_usec = 100000;
 
-    OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
     if( m_threadRun == false )
@@ -223,7 +223,7 @@ int16_t LWM2MServer::runServer( void )
             ret = -1;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
 
     if( ret == 0 )
     {
@@ -232,7 +232,7 @@ int16_t LWM2MServer::runServer( void )
             ret = -1;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
     if( ret == 0 )
     {
         if (result > 0)
@@ -283,7 +283,7 @@ int16_t LWM2MServer::runServer( void )
             }
         }
     }
-    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
 
     return ret;
 } /* LWM2MServer::runServer() */
@@ -296,7 +296,7 @@ int16_t LWM2MServer::runServer( void )
 bool LWM2MServer::hasDevice( std::string client )
 {
     bool ret = true;
-    OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 
     if( !isAlive() )
         ret = false;
@@ -309,7 +309,7 @@ bool LWM2MServer::hasDevice( std::string client )
             ret = true;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
     return ret;
 
 } /* LWM2MServer::hasDevice() */
@@ -319,7 +319,7 @@ bool LWM2MServer::hasDevice( std::string client )
 /*
 * LWM2MServer::read()
 */
-int8_t LWM2MServer::read( const LWM2MResource* p_res, std::string& val,
+int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
         s_cbparams_t* p_cbParams )
 {
     int8_t ret = 0;
@@ -328,7 +328,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, std::string& val,
     const LWM2MDevice* p_dev;
     const LWM2MObject* p_obj;
     lwm2m_uri_t uri;
-    val = "";
+
     s_cbparams_t* p_cbData = NULL;
     s_cbparams_t cbData;
     int lwm2mRet;
@@ -345,7 +345,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, std::string& val,
         p_cbData = p_cbParams;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 
     if( (!isAlive()) || (p_res == NULL) )
         ret = -1;
@@ -391,7 +391,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, std::string& val,
             ret = -1;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
 
     if( ret == 0 )
     {
@@ -401,13 +401,13 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, std::string& val,
             while( true )
             {
                 int status;
-                OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+                OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 #ifndef OPCUA_LWM2M_SERVER_USE_THREAD
                 /* call the server */
                 runServer();
 #endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
                 status = p_cbData->lwm2mParams.status;;
-                OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+                OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
                 if( status != NO_ERROR )
                     break;
             }
@@ -461,7 +461,7 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
         p_cbData = p_cbParams;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 
     if( (!isAlive()) || (p_res == NULL)   )
         ret = -1;
@@ -506,7 +506,7 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
                 ret = -1;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
 
     if( ret == 0 )
     {
@@ -515,13 +515,13 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
             while( true )
             {
                 int status;
-                OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+                OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 #ifndef OPCUA_LWM2M_SERVER_USE_THREAD
                 /* call the server */
                 runServer();
 #endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
                 status = p_cbData->lwm2mParams.status;
-                OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+                OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
                 if( status != NO_ERROR )
                     break;
             }
@@ -571,7 +571,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
             p_cbData = p_cbParams;
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_LOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
 
     if( ret == 0 )
     {
@@ -638,7 +638,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
         }
     }
 
-    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK();
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
     return ret;
 
 } /* LWM2MServer::observe() */
