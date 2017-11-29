@@ -129,7 +129,7 @@ public:
      *
      * \return  Object ID.
      */
-    int16_t getObjId( void ) const {return m_objId;}
+    uint16_t getObjId( void ) const {return m_objId;}
 
 
     /**
@@ -137,7 +137,7 @@ public:
      *
      * \return  Instance ID.
      */
-    int16_t getInstId( void ) const {return m_instId;}
+    uint8_t getInstId( void ) const {return m_instId;}
 
 
     /**
