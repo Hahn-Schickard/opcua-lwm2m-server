@@ -655,6 +655,32 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
     }
 
     OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
+
+     if( ret == 0 )
+    {
+        while( true )
+        {
+            int status;
+            OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
+#ifndef OPCUA_LWM2M_SERVER_USE_THREAD
+            /* call the server */
+            runServer();
+#endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
+            status = p_cbData->lwm2mParams.status;;
+            OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
+            if( status != -1)
+                break;
+        }
+
+        if( p_cbData->lwm2mParams.status == NO_ERROR)
+        {
+            ret = 0;
+        }
+        else
+            ret = -1;
+        p_cbData->lwm2mParams.dataLen = 0;
+    }
+
     return ret;
 
 } /* LWM2MServer::observe() */
