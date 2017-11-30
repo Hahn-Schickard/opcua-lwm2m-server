@@ -632,7 +632,8 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
             /* start observation */
             p_cbData->p_res = p_res;
             p_cbData->lwm2mParams.obsInit = true;
-            p_cbData->lwm2mParams.status = NO_ERROR;
+            p_cbData->lwm2mParams.dataLen = 0;
+            p_cbData->lwm2mParams.status = -1;
 
             lwm2mRet = lwm2m_observe( mp_lwm2mH, p_cli->internalID, &uri, notifyCb, p_cbData);
 
