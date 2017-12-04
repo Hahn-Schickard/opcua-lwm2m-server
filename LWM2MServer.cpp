@@ -417,10 +417,10 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
             {
                 int status;
                 OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
-#ifndef OPCUA_LWM2M_SERVER_USE_THREAD || 1
+#if (!OPCUA_LWM2M_SERVER_USE_THREAD || 1)
                 /* call the server */
                 runServer();
-#endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
+#endif /* #if OPCUA_LWM2M_SERVER_USE_THREAD */
                 status = p_cbData->lwm2mParams.status;;
                 OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
                 if( status != NO_ERROR )
@@ -661,10 +661,10 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
         {
             int status;
             OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
-#ifndef OPCUA_LWM2M_SERVER_USE_THREAD || 1
+#if (!OPCUA_LWM2M_SERVER_USE_THREAD || 1)
             /* call the server */
             runServer();
-#endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
+#endif /* #if OPCUA_LWM2M_SERVER_USE_THREAD */
             status = p_cbData->lwm2mParams.status;;
             OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
             if( status != -1)
