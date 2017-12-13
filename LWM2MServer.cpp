@@ -260,13 +260,10 @@ int16_t LWM2MServer::runServer( void )
                 socklen_t addrLen;
 
                 addrLen = sizeof(addr);
-                numBytes = recvfrom( m_sock, buffer, LWM2MSERVER_MAX_PACKET_SIZE, 0,
+                numBytes = recvfrom( m_sock, buffer, LWM2MSERVER_MAX_PACKET_SIZE, MSG_DONTWAIT,
                         (struct sockaddr *)&addr, &addrLen);
 
-                if (numBytes == -1)
-                    ret = -2;
-
-                if( ret == 0 )
+                if( (ret == 0) && (numBytes > 0) )
                 {
                     char s[INET6_ADDRSTRLEN];
                     connection_t * connP;
