@@ -57,6 +57,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <queue>
 #include "liblwm2m.h"
 #include "connection.h"
 #include "LWM2MResourceObserver.h"
@@ -106,6 +107,19 @@ public:
 
         /* LWM2M parameters */
         s_lwm2m_resobsparams_t lwm2mParams;
+    };
+
+private:
+
+    /**
+     * Device event.
+     */
+    struct s_devEvent_t
+    {
+        /* pointer to the device */
+        LWM2MDevice* p_dev;
+        /* event type */
+        e_lwm2m_serverobserver_event_t event;
     };
 
 public:
@@ -361,6 +375,15 @@ private:
 
 
     /**
+     * \brief   Check events.
+     *
+     *          This functions checks for pending events.
+     *
+     */
+    void checkEvents( void );
+
+
+    /**
      * \brief   Callback used to indicate if any action happened for a client.
      *
      *          This function indicates several events e.g. if a new
@@ -437,6 +460,9 @@ private:
 
     /** LWM2M Devices associated to the server */
     std::map< std::string, LWM2MDevice* > m_devMap;
+
+    /** Device event queue */
+    std::queue< s_devEvent_t > m_devEv;
 
     /** Vector of registered observer */
     std::vector< LWM2MServerObserver* > m_vectObs;

@@ -230,6 +230,9 @@ int16_t LWM2MServer::runServer( void )
         ret = -1;
 #endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
 
+    /* check for pending events */
+    checkEvents();
+
     if( ret == 0 )
     {
         result = lwm2m_step(mp_lwm2mH, &(tv.tv_sec) );
@@ -806,6 +809,23 @@ int8_t LWM2MServer::notifyObservers( const LWM2MDevice* p_dev,
 
 /*---------------------------------------------------------------------------*/
 /*
+* LWM2MServer::checkEvents()
+*/
+void LWM2MServer::checkEvents( void )
+{
+    while( m_devEv.size() )
+    {
+        s_devEvent_t ev = m_devEv.front();
+        m_devEv.pop();
+        /* Notify all Observers */
+        notifyObservers( ev.p_dev, ev.event );
+    }
+
+} /* LWM2MServer::checkEvents() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
 * LWM2MServer::monitorCb()
 */
 void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
@@ -867,8 +887,8 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
           p_srv->m_devMap.insert(
               std::pair< std::string, LWM2MDevice* >( p_dev->getName(), p_dev ) );
 
-          /* Notify all Observers */
-          p_srv->notifyObservers( p_dev, e_lwm2m_serverobserver_event_register );
+          /** Add event */
+          p_srv->m_devEv.push( {p_dev, e_lwm2m_serverobserver_event_register} );
         }
         break;
 
