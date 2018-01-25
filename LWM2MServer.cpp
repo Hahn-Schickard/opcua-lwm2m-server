@@ -986,7 +986,8 @@ void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         {
           /* call the notification */
           p_inst->p_res->notifyObservers( &p_inst->lwm2mParams );
-          lwm2m_data_free(ret, p_lwm2mData);
+          if( p_lwm2mData != NULL )
+            lwm2m_data_free(ret, p_lwm2mData);
         }
         else
           p_inst->lwm2mParams.dataLen = ret;
