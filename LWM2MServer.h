@@ -60,6 +60,7 @@
 #include <queue>
 #include "liblwm2m.h"
 #include "connection.h"
+#include "LWM2MDevice.h"
 #include "LWM2MResourceObserver.h"
 #include "LWM2MServerObserver.h"
 
@@ -100,11 +101,8 @@ public:
      */
     struct s_cbparams_t
     {
-        /* pointer to the object instance */
-        const LWM2MObject* p_obj;
-        /* pointer to the resource instance */
-        const LWM2MResource* p_res;
-
+        /* Pointer to the LWM2M Server to handle the callback */
+        LWM2MServer* p_srv;
         /* LWM2M parameters */
         s_lwm2m_resobsparams_t lwm2mParams;
     };
@@ -116,8 +114,8 @@ private:
      */
     struct s_devEvent_t
     {
-        /* pointer to the device */
-        LWM2MDevice* p_dev;
+        /* event parameter */
+        s_lwm2m_serverobserver_event_param_t param;
         /* event type */
         e_lwm2m_serverobserver_event_t event;
     };
@@ -355,7 +353,7 @@ protected:
      *
      * \return  0 on success or negative value on error.
      */
-    int8_t notifyObservers( const LWM2MDevice* p_dev,
+    int8_t notifyObservers( const s_lwm2m_serverobserver_event_param_t param,
         e_lwm2m_serverobserver_event_t ev ) const;
 
 

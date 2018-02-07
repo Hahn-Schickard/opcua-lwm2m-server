@@ -70,7 +70,7 @@ class LWM2MDevice;
  */
 
 /**
- * \brief    Parameters used for resource notifications.
+ * \brief    Events used for notifications.
  */
 typedef enum
 {
@@ -84,6 +84,19 @@ typedef enum
     e_lwm2m_serverobserver_event_deregister,
 
 } e_lwm2m_serverobserver_event_t;
+
+
+/**
+ * \brief    Parameters used for notifications.
+ */
+typedef struct
+{
+  /* Device pointer */
+  const LWM2MDevice* p_dev;
+  /* Name of the device */
+  char devName[100];
+
+} s_lwm2m_serverobserver_event_param_t;
 
 
 /*
@@ -123,7 +136,7 @@ public:
      *
      * \return  0 on success or negative value on error.
      */
-    virtual int8_t notify( const LWM2MDevice* p_dev,
+    virtual int8_t notify( s_lwm2m_serverobserver_event_param_t param,
           const e_lwm2m_serverobserver_event_t ev ) = 0;
 
 };

@@ -397,7 +397,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
         uri.flag = LWM2M_URI_FLAG_OBJECT_ID | LWM2M_URI_FLAG_INSTANCE_ID |
                 LWM2M_URI_FLAG_RESOURCE_ID;
 
-        p_cbData->p_res = p_res;
+        p_cbData->p_srv = this;
         p_cbData->lwm2mParams.dataLen = 1;
         p_cbData->lwm2mParams.status = NO_ERROR;
         lwm2mRet = lwm2m_dm_read( mp_lwm2mH, p_cli->internalID, &uri, notifyCb, p_cbData);
@@ -509,7 +509,7 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
         uri.resourceId = p_res->getResId();
         uri.flag = LWM2M_URI_FLAG_OBJECT_ID | LWM2M_URI_FLAG_INSTANCE_ID | LWM2M_URI_FLAG_RESOURCE_ID;
 
-        p_cbData->p_res = p_res;
+        p_cbData->p_srv = this;
         p_cbData->lwm2mParams.status = NO_ERROR;
 
         lwm2mRet = lwm2m_dm_write( mp_lwm2mH, p_cli->internalID, &uri, LWM2M_CONTENT_TEXT,
@@ -629,7 +629,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
         if( observe == true )
         {
             /* start observation */
-            p_cbData->p_res = p_res;
+            p_cbData->p_srv = this;
             p_cbData->lwm2mParams.obsInit = true;
             p_cbData->lwm2mParams.dataLen = 0;
             p_cbData->lwm2mParams.status = -1;
@@ -789,7 +789,7 @@ lwm2m_client_t* LWM2MServer::getDevice( std::string client )
 /*
 * LWM2MServer::notifyObservers()
 */
-int8_t LWM2MServer::notifyObservers( const LWM2MDevice* p_dev,
+int8_t LWM2MServer::notifyObservers( s_lwm2m_serverobserver_event_param_t param,
     e_lwm2m_serverobserver_event_t ev ) const
 {
     /* Iterate through the observers in the list */
@@ -799,7 +799,7 @@ int8_t LWM2MServer::notifyObservers( const LWM2MDevice* p_dev,
     while( it != m_vectObs.end() )
     {
         /* notify the current observer */
-        (*it)->notify( p_dev, ev );
+        (*it)->notify( param, ev );
         it++;
     }
 
@@ -818,7 +818,7 @@ void LWM2MServer::checkEvents( void )
         s_devEvent_t ev = m_devEv.front();
         m_devEv.pop();
         /* Notify all Observers */
-        notifyObservers( ev.p_dev, ev.event );
+        notifyObservers( ev.param, ev.event );
     }
 
 } /* LWM2MServer::checkEvents() */
@@ -852,9 +852,25 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
 
         if( ret == 0 )
         {
+          std::map< std::string, LWM2MDevice* >::iterator it = p_srv->m_devMap.find( targetP->name );
           /* check the map for an existing device with the same name */
-          if( p_srv->m_devMap.find( targetP->name ) != p_srv->m_devMap.end())
-            ret = -1;
+          if( it != p_srv->m_devMap.end())
+          {
+            /* The device already exists. Delete the device before creating
+             * a new one. */
+            s_devEvent_t ev;
+            strncpy( (char*)ev.param.devName, it->second->getName().c_str(),
+                sizeof(ev.param.devName));
+            ev.event = e_lwm2m_serverobserver_event_deregister;
+            p_srv->m_devEv.push( ev );
+
+            /* delete the device from the list */
+            delete( it->second );
+            p_srv->m_devMap.erase( it );
+
+            ret = 0;
+          }
+
         }
 
         if( ret == 0 )
@@ -888,7 +904,10 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
               std::pair< std::string, LWM2MDevice* >( p_dev->getName(), p_dev ) );
 
           /** Add event */
-          p_srv->m_devEv.push( {p_dev, e_lwm2m_serverobserver_event_register} );
+          s_devEvent_t ev;
+          ev.param.p_dev = p_dev;
+          ev.event = e_lwm2m_serverobserver_event_register;
+          p_srv->m_devEv.push( ev );
         }
         break;
 
@@ -911,7 +930,11 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         if( ret == 0 )
         {
           /* Notify all Observers */
-          p_srv->notifyObservers( it->second, e_lwm2m_serverobserver_event_deregister );
+          s_devEvent_t ev;
+          strncpy( (char*)ev.param.devName, it->second->getName().c_str(),
+              sizeof(ev.param.devName));
+          ev.event = e_lwm2m_serverobserver_event_deregister;
+          p_srv->m_devEv.push( ev );
 
           /* delete the device from the list */
           delete( it->second );
@@ -951,14 +974,11 @@ void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
     /* convert user data to server instance */
     s_cbparams_t* p_inst = (s_cbparams_t*)userData;
 
-    LWM2MServer* p_srv;
-    if( (p_inst != NULL) && (p_inst->p_res != NULL) &&
-        (p_inst->p_res->getParent() != NULL) &&
-        (p_inst->p_res->getParent()->getParent() != NULL) )
-        p_srv = p_inst->p_res->getParent()->getParent()->getServer();
-    else if( (p_inst != NULL) && (p_inst->p_obj != NULL) &&
-        (p_inst->p_obj->getParent() != NULL) )
-      p_srv = p_inst->p_obj->getParent()->getServer();
+    LWM2MServer* p_srv = p_inst->p_srv;
+    LWM2MDevice* p_dev = NULL;
+    LWM2MObject* p_obj = NULL;
+    LWM2MResource* p_res = NULL;;
+
 
     if( p_srv == NULL )
       return;
@@ -974,7 +994,39 @@ void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
     p_inst->lwm2mParams.buffer = data;
     p_inst->lwm2mParams.bufferLen = dataLength;
 
-    if( p_inst->p_res != NULL )
+    std::map< std::string, LWM2MDevice* >::const_iterator devIt = p_srv->m_devMap.begin();
+    while( devIt != p_srv->m_devMap.end() )
+    {
+      if( devIt->second->getID() == p_inst->lwm2mParams.clientID )
+      {
+        p_dev = devIt->second;
+        break;
+      }
+
+      devIt++;
+    }
+
+    if( p_dev == NULL )
+      return;
+
+
+    if( LWM2M_URI_IS_SET_INSTANCE( p_inst->lwm2mParams.uriP ) )
+    {
+      /* get object */
+      p_obj = p_dev->getObject( p_inst->lwm2mParams.uriP->objectId,
+          p_inst->lwm2mParams.uriP->instanceId );
+
+    }
+
+    if( (p_obj != NULL) && ( LWM2M_URI_IS_SET_RESOURCE( p_inst->lwm2mParams.uriP ) ) )
+    {
+      /* Get the resource */
+      p_res = p_obj->getResource( p_inst->lwm2mParams.uriP->resourceId );
+    }
+
+
+
+    if( p_res != NULL )
     {
         ret = lwm2m_data_parse( p_inst->lwm2mParams.uriP, p_inst->lwm2mParams.buffer,
                p_inst->lwm2mParams.bufferLen, p_inst->lwm2mParams.format, &p_lwm2mData );
@@ -985,22 +1037,22 @@ void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         if( !p_inst->lwm2mParams.dataLen )
         {
           /* call the notification */
-          p_inst->p_res->notifyObservers( &p_inst->lwm2mParams );
+          p_res->notifyObservers( &p_inst->lwm2mParams );
           if( p_lwm2mData != NULL )
             lwm2m_data_free(ret, p_lwm2mData);
         }
         else
           p_inst->lwm2mParams.dataLen = ret;
     }
-    else if( p_inst->p_obj != NULL )
+    else if( p_obj != NULL )
     {
       ret = lwm2m_data_parse( p_inst->lwm2mParams.uriP, p_inst->lwm2mParams.buffer,
              p_inst->lwm2mParams.bufferLen, p_inst->lwm2mParams.format, &p_lwm2mData );
 
       /* Iterate through the resources and notify about the change of data */
-      std::vector< LWM2MResource* >::const_iterator it = p_inst->p_obj->resourceStart();
+      std::vector< LWM2MResource* >::const_iterator it = p_obj->resourceStart();
       p_inst->lwm2mParams.buffer = NULL;
-      while( it != p_inst->p_obj->resourceEnd() )
+      while( it != p_obj->resourceEnd() )
       {
           lwm2m_data_t* p_lwm2mDataCur = p_lwm2mData;
           for( int i = 0; i < ret; i++ )
