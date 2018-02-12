@@ -55,6 +55,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <string>
+#include <list>
 #include <vector>
 #include <map>
 #include <queue>
@@ -108,6 +109,17 @@ public:
     };
 
 private:
+
+    /**
+     * Deleted device.
+     */
+    struct s_devDel_t
+    {
+      /* the deleted device */
+      LWM2MDevice* p_dev;
+      /* timeout to remove it */
+      uint32_t tot;
+    };
 
     /**
      * Device event.
@@ -382,6 +394,15 @@ private:
 
 
     /**
+     * \brief   Check deleted devices.
+     *
+     *          This functions checks for deleted devices.
+     *
+     */
+    void checkDeletedDevices( void );
+
+
+    /**
      * \brief   Callback used to indicate if any action happened for a client.
      *
      *          This function indicates several events e.g. if a new
@@ -458,6 +479,9 @@ private:
 
     /** LWM2M Devices associated to the server */
     std::map< std::string, LWM2MDevice* > m_devMap;
+
+    /** List of LWM2M Devices deleted by the server */
+    std::list< s_devDel_t > m_devDel;
 
     /** Device event queue */
     std::queue< s_devEvent_t > m_devEv;

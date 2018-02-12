@@ -62,6 +62,9 @@
 /** Maximum size of a packet */
 #define LWM2MSERVER_MAX_PACKET_SIZE         1500
 
+/* Device delete timeout */
+#define LWM2MSERVER_DEV_DEL_TOT             10
+
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
 #define OPCUA_LWM2M_SERVER_MUTEX_LOCK(a)        pthread_mutex_lock( &(a)->m_mutex );
 #define OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(a)      pthread_mutex_unlock( &(a)->m_mutex );
@@ -232,6 +235,9 @@ int16_t LWM2MServer::runServer( void )
 
     /* check for pending events */
     checkEvents();
+
+    /* Check for deleted devices */
+    checkDeletedDevices();
 
     if( ret == 0 )
     {
@@ -826,6 +832,34 @@ void LWM2MServer::checkEvents( void )
 
 /*---------------------------------------------------------------------------*/
 /*
+* LWM2MServer::checkDeletedDevices()
+*/
+void LWM2MServer::checkDeletedDevices( void )
+{
+    std::list< s_devDel_t >::iterator it = m_devDel.begin();
+    while( it != m_devDel.end() )
+    {
+        if(it->tot < time(NULL))
+        {
+          /* Timeout expired, delete element */
+          if( it->p_dev != NULL )
+            delete( it->p_dev );
+
+          m_devDel.pop_front();
+          it = m_devDel.begin();
+        }
+        else
+        {
+          /* Stop looking */
+          break;
+        }
+    }
+
+} /* LWM2MServer::checkDeletedDevices() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
 * LWM2MServer::monitorCb()
 */
 void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
@@ -864,8 +898,8 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
             ev.event = e_lwm2m_serverobserver_event_deregister;
             p_srv->m_devEv.push( ev );
 
-            /* delete the device from the list */
-            delete( it->second );
+            /* move the device to the deleted device list */
+            p_srv->m_devDel.push_back( {it->second, (time(NULL) + LWM2MSERVER_DEV_DEL_TOT)} );
             p_srv->m_devMap.erase( it );
 
             ret = 0;
@@ -936,8 +970,8 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
           ev.event = e_lwm2m_serverobserver_event_deregister;
           p_srv->m_devEv.push( ev );
 
-          /* delete the device from the list */
-          delete( it->second );
+          /* move the device to the deleted device list */
+          p_srv->m_devDel.push_back( {it->second, (time(NULL) + LWM2MSERVER_DEV_DEL_TOT)} );
           p_srv->m_devMap.erase( it );
         }
 
