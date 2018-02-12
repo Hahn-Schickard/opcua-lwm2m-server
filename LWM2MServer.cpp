@@ -1007,7 +1007,10 @@ void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
     }
 
     if( p_dev == NULL )
+    {
+      OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(p_srv);
       return;
+    }
 
 
     if( LWM2M_URI_IS_SET_INSTANCE( p_inst->lwm2mParams.uriP ) )
