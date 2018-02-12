@@ -23,3 +23,148 @@ index c676bac..f8bd293 100644
 +#endif
 +
  #endif
+diff --git a/core/internals.h b/core/internals.h
+index 3389b82..8f61a9b 100644
+--- a/core/internals.h
++++ b/core/internals.h
+@@ -62,6 +62,8 @@
+ 
+ #include "er-coap-13/er-coap-13.h"
+ 
++#undef LWM2M_WITH_LOGS
++
+ #ifdef LWM2M_WITH_LOGS
+ #include <inttypes.h>
+ #define LOG(STR) lwm2m_printf("[%s:%d] " STR "\r\n", __func__ , __LINE__)
+@@ -275,7 +277,7 @@ lwm2m_observed_t * observe_findByUri(lwm2m_context_t * contextP, lwm2m_uri_t * u
+ // defined in registration.c
+ coap_status_t registration_handleRequest(lwm2m_context_t * contextP, lwm2m_uri_t * uriP, void * fromSessionH, coap_packet_t * message, coap_packet_t * response);
+ void registration_deregister(lwm2m_context_t * contextP, lwm2m_server_t * serverP);
+-void registration_freeClient(lwm2m_client_t * clientP);
++void registration_freeClient(lwm2m_context_t * contextP, lwm2m_client_t * clientP);
+ uint8_t registration_start(lwm2m_context_t * contextP);
+ void registration_step(lwm2m_context_t * contextP, time_t currentTime, time_t * timeoutP);
+ lwm2m_status_t registration_getStatus(lwm2m_context_t * contextP);
+diff --git a/core/liblwm2m.c b/core/liblwm2m.c
+index e5237eb..0ee47d6 100644
+--- a/core/liblwm2m.c
++++ b/core/liblwm2m.c
+@@ -190,7 +190,7 @@ void lwm2m_close(lwm2m_context_t * contextP)
+         clientP = contextP->clientList;
+         contextP->clientList = contextP->clientList->next;
+ 
+-        registration_freeClient(clientP);
++        registration_freeClient(contextP, clientP);
+     }
+ #endif
+ 
+diff --git a/core/registration.c b/core/registration.c
+index 768f6fd..787416e 100644
+--- a/core/registration.c
++++ b/core/registration.c
+@@ -468,6 +468,20 @@ static void prv_freeClientObjectList(lwm2m_client_object_t * objects)
+     }
+ }
+ 
++static void prv_freeClientTransactions(lwm2m_context_t * contextP, lwm2m_client_t * clientP)
++{
++    lwm2m_transaction_t * transP = contextP->transactionList;
++    while (transP != NULL)
++    {
++      lwm2m_transaction_t * targetP = transP;
++      transP = transP->next;
++
++      if( ((lwm2m_client_t*)targetP->peerP) == clientP )
++        transaction_remove( contextP, targetP );
++
++    }
++}
++
+ static int prv_getParameters(multi_option_t * query,
+                              char ** nameP,
+                              uint32_t * lifetimeP,
+@@ -839,20 +853,24 @@ static lwm2m_client_t * prv_getClientByName(lwm2m_context_t * contextP,
+     return targetP;
+ }
+ 
+-void registration_freeClient(lwm2m_client_t * clientP)
++void registration_freeClient(lwm2m_context_t * contextP, lwm2m_client_t * clientP)
+ {
+     LOG("Entering");
+     if (clientP->name != NULL) lwm2m_free(clientP->name);
+     if (clientP->msisdn != NULL) lwm2m_free(clientP->msisdn);
+     if (clientP->altPath != NULL) lwm2m_free(clientP->altPath);
+     prv_freeClientObjectList(clientP->objectList);
++    prv_freeClientTransactions( contextP, clientP );
+     while(clientP->observationList != NULL)
+     {
+         lwm2m_observation_t * targetP;
+ 
+         targetP = clientP->observationList;
+         clientP->observationList = clientP->observationList->next;
+-        lwm2m_free(targetP);
++        targetP->callback(clientP->internalID, &targetP->uri,
++            COAP_503_SERVICE_UNAVAILABLE, LWM2M_CONTENT_TEXT, NULL, 0,
++            targetP->userData);
++        observe_remove( clientP, targetP );
+     }
+     lwm2m_free(clientP);
+ }
+@@ -973,12 +991,12 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+ 
+             if (prv_getLocationString(clientP->internalID, location) == 0)
+             {
+-                registration_freeClient(clientP);
++                registration_freeClient(contextP, clientP);
+                 return COAP_500_INTERNAL_SERVER_ERROR;
+             }
+             if (coap_set_header_location_path(response, location) == 0)
+             {
+-                registration_freeClient(clientP);
++                registration_freeClient(contextP, clientP);
+                 return COAP_500_INTERNAL_SERVER_ERROR;
+             }
+ 
+@@ -1090,7 +1108,7 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+         {
+             contextP->monitorCallback(clientP->internalID, NULL, COAP_202_DELETED, LWM2M_CONTENT_TEXT, NULL, 0, contextP->monitorUserData);
+         }
+-        registration_freeClient(clientP);
++        registration_freeClient(contextP, clientP);
+         result = COAP_202_DELETED;
+     }
+     break;
+@@ -1192,7 +1210,7 @@ void registration_step(lwm2m_context_t * contextP,
+             {
+                 contextP->monitorCallback(clientP->internalID, NULL, COAP_202_DELETED, LWM2M_CONTENT_TEXT, NULL, 0, contextP->monitorUserData);
+             }
+-            registration_freeClient(clientP);
++            registration_freeClient(contextP, clientP);
+         }
+         else
+         {
+diff --git a/examples/shared/connection.h b/examples/shared/connection.h
+index c676bac..f8bd293 100644
+--- a/examples/shared/connection.h
++++ b/examples/shared/connection.h
+@@ -18,6 +18,11 @@
+ #ifndef CONNECTION_H_
+ #define CONNECTION_H_
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++
+ #include <stdio.h>
+ #include <unistd.h>
+ #include <netinet/in.h>
+@@ -52,4 +57,8 @@ void connection_free(connection_t * connList);
+ 
+ int connection_send(connection_t *connP, uint8_t * buffer, size_t length);
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif
