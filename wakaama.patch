@@ -1,41 +1,7 @@
-diff --git a/waakama/examples/shared/connection.h b/examples/shared/connection.h
-index c676bac..f8bd293 100644
---- a/wakaama/examples/shared/connection.h
-+++ b/wakaama/examples/shared/connection.h
-@@ -18,6 +18,11 @@
- #ifndef CONNECTION_H_
- #define CONNECTION_H_
- 
-+#ifdef __cplusplus
-+extern "C" {
-+#endif
-+
-+
- #include <stdio.h>
- #include <unistd.h>
- #include <netinet/in.h>
-@@ -52,4 +57,8 @@ void connection_free(connection_t * connList);
- 
- int connection_send(connection_t *connP, uint8_t * buffer, size_t length);
- 
-+#ifdef __cplusplus
-+}
-+#endif
-+
- #endif
-diff --git a/core/internals.h b/core/internals.h
+diff --git a/wakaama/core/internals.h b/wakaama/core/internals.h
 index 3389b82..8f61a9b 100644
---- a/core/internals.h
-+++ b/core/internals.h
-@@ -62,6 +62,8 @@
- 
- #include "er-coap-13/er-coap-13.h"
- 
-+#undef LWM2M_WITH_LOGS
-+
- #ifdef LWM2M_WITH_LOGS
- #include <inttypes.h>
- #define LOG(STR) lwm2m_printf("[%s:%d] " STR "\r\n", __func__ , __LINE__)
+--- a/wakaama/core/internals.h
++++ b/wakaama/core/internals.h
 @@ -275,7 +277,7 @@ lwm2m_observed_t * observe_findByUri(lwm2m_context_t * contextP, lwm2m_uri_t * u
  // defined in registration.c
  coap_status_t registration_handleRequest(lwm2m_context_t * contextP, lwm2m_uri_t * uriP, void * fromSessionH, coap_packet_t * message, coap_packet_t * response);
@@ -45,10 +11,10 @@ index 3389b82..8f61a9b 100644
  uint8_t registration_start(lwm2m_context_t * contextP);
  void registration_step(lwm2m_context_t * contextP, time_t currentTime, time_t * timeoutP);
  lwm2m_status_t registration_getStatus(lwm2m_context_t * contextP);
-diff --git a/core/liblwm2m.c b/core/liblwm2m.c
+diff --git a/wakaama/core/liblwm2m.c b/wakaama/core/liblwm2m.c
 index e5237eb..0ee47d6 100644
---- a/core/liblwm2m.c
-+++ b/core/liblwm2m.c
+--- a/wakaama/core/liblwm2m.c
++++ b/wakaama/core/liblwm2m.c
 @@ -190,7 +190,7 @@ void lwm2m_close(lwm2m_context_t * contextP)
          clientP = contextP->clientList;
          contextP->clientList = contextP->clientList->next;
@@ -58,10 +24,10 @@ index e5237eb..0ee47d6 100644
      }
  #endif
  
-diff --git a/core/registration.c b/core/registration.c
+diff --git a/wakaama/core/registration.c b/wakaama/core/registration.c
 index 768f6fd..787416e 100644
---- a/core/registration.c
-+++ b/core/registration.c
+--- a/wakaama/core/registration.c
++++ b/wakaama/core/registration.c
 @@ -468,6 +468,20 @@ static void prv_freeClientObjectList(lwm2m_client_object_t * objects)
      }
  }
@@ -143,10 +109,10 @@ index 768f6fd..787416e 100644
          }
          else
          {
-diff --git a/examples/shared/connection.h b/examples/shared/connection.h
+diff --git a/wakaama/examples/shared/connection.h b/wakaama/examples/shared/connection.h
 index c676bac..f8bd293 100644
---- a/examples/shared/connection.h
-+++ b/examples/shared/connection.h
+--- a/wakaama/examples/shared/connection.h
++++ b/wakaama/examples/shared/connection.h
 @@ -18,6 +18,11 @@
  #ifndef CONNECTION_H_
  #define CONNECTION_H_
