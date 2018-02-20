@@ -917,6 +917,7 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
             /* The device already exists. Delete the device before creating
              * a new one. */
             s_devEvent_t ev;
+            ev.param.p_dev = NULL;
             strncpy( (char*)ev.param.devName, it->second->getName().c_str(),
                 sizeof(ev.param.devName));
             ev.event = e_lwm2m_serverobserver_event_deregister;
@@ -964,6 +965,8 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
           /** Add event */
           s_devEvent_t ev;
           ev.param.p_dev = p_dev;
+          strncpy( (char*)ev.param.devName, p_dev->getName().c_str(),
+                       sizeof(ev.param.devName));
           ev.event = e_lwm2m_serverobserver_event_register;
           p_srv->m_devEv.push( ev );
         }
@@ -989,6 +992,7 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         {
           /* Notify all Observers */
           s_devEvent_t ev;
+          ev.param.p_dev = NULL;
           strncpy( (char*)ev.param.devName, it->second->getName().c_str(),
               sizeof(ev.param.devName));
           ev.event = e_lwm2m_serverobserver_event_deregister;
