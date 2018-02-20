@@ -688,7 +688,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
 
     OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
 
-     if( ret == 0 )
+    if( ret == 0 )
     {
         while( true )
         {
