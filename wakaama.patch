@@ -1,8 +1,8 @@
 diff --git a/wakaama/core/internals.h b/wakaama/core/internals.h
-index 3389b82..8f61a9b 100644
+index 3389b82..c6fdded 100644
 --- a/wakaama/core/internals.h
 +++ b/wakaama/core/internals.h
-@@ -275,7 +277,7 @@ lwm2m_observed_t * observe_findByUri(lwm2m_context_t * contextP, lwm2m_uri_t * u
+@@ -275,7 +275,7 @@ lwm2m_observed_t * observe_findByUri(lwm2m_context_t * contextP, lwm2m_uri_t * u
  // defined in registration.c
  coap_status_t registration_handleRequest(lwm2m_context_t * contextP, lwm2m_uri_t * uriP, void * fromSessionH, coap_packet_t * message, coap_packet_t * response);
  void registration_deregister(lwm2m_context_t * contextP, lwm2m_server_t * serverP);
@@ -25,10 +25,10 @@ index e5237eb..0ee47d6 100644
  #endif
  
 diff --git a/wakaama/core/registration.c b/wakaama/core/registration.c
-index 768f6fd..787416e 100644
+index 768f6fd..710870e 100644
 --- a/wakaama/core/registration.c
 +++ b/wakaama/core/registration.c
-@@ -468,6 +468,20 @@ static void prv_freeClientObjectList(lwm2m_client_object_t * objects)
+@@ -468,6 +468,24 @@ static void prv_freeClientObjectList(lwm2m_client_object_t * objects)
      }
  }
  
@@ -41,7 +41,11 @@ index 768f6fd..787416e 100644
 +      transP = transP->next;
 +
 +      if( ((lwm2m_client_t*)targetP->peerP) == clientP )
++      {
++        if( targetP->callback )
++          targetP->callback( targetP, NULL );
 +        transaction_remove( contextP, targetP );
++      }
 +
 +    }
 +}
@@ -49,7 +53,7 @@ index 768f6fd..787416e 100644
  static int prv_getParameters(multi_option_t * query,
                               char ** nameP,
                               uint32_t * lifetimeP,
-@@ -839,20 +853,24 @@ static lwm2m_client_t * prv_getClientByName(lwm2m_context_t * contextP,
+@@ -839,20 +857,24 @@ static lwm2m_client_t * prv_getClientByName(lwm2m_context_t * contextP,
      return targetP;
  }
  
@@ -76,7 +80,27 @@ index 768f6fd..787416e 100644
      }
      lwm2m_free(clientP);
  }
-@@ -973,12 +991,12 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+@@ -940,6 +962,19 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+             if (clientP != NULL)
+             {
+                 // we reset this registration
++                prv_freeClientTransactions( contextP, clientP );
++                while(clientP->observationList != NULL)
++                {
++                    lwm2m_observation_t * targetP;
++
++                    targetP = clientP->observationList;
++                    clientP->observationList = clientP->observationList->next;
++                    targetP->callback(clientP->internalID, &targetP->uri,
++                        COAP_503_SERVICE_UNAVAILABLE, LWM2M_CONTENT_TEXT, NULL, 0,
++                        targetP->userData);
++                    observe_remove( clientP, targetP );
++                }
++
+                 lwm2m_free(clientP->name);
+                 if (clientP->msisdn != NULL) lwm2m_free(clientP->msisdn);
+                 if (clientP->altPath != NULL) lwm2m_free(clientP->altPath);
+@@ -973,12 +1008,12 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
  
              if (prv_getLocationString(clientP->internalID, location) == 0)
              {
@@ -91,7 +115,7 @@ index 768f6fd..787416e 100644
                  return COAP_500_INTERNAL_SERVER_ERROR;
              }
  
-@@ -1090,7 +1108,7 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+@@ -1090,7 +1125,7 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
          {
              contextP->monitorCallback(clientP->internalID, NULL, COAP_202_DELETED, LWM2M_CONTENT_TEXT, NULL, 0, contextP->monitorUserData);
          }
@@ -100,7 +124,7 @@ index 768f6fd..787416e 100644
          result = COAP_202_DELETED;
      }
      break;
-@@ -1192,7 +1210,7 @@ void registration_step(lwm2m_context_t * contextP,
+@@ -1192,7 +1227,7 @@ void registration_step(lwm2m_context_t * contextP,
              {
                  contextP->monitorCallback(clientP->internalID, NULL, COAP_202_DELETED, LWM2M_CONTENT_TEXT, NULL, 0, contextP->monitorUserData);
              }
@@ -109,6 +133,19 @@ index 768f6fd..787416e 100644
          }
          else
          {
+diff --git a/wakaama/core/transaction.c b/wakaama/core/transaction.c
+index 0e4f6bb..9e2388b 100644
+--- a/wakaama/core/transaction.c
++++ b/wakaama/core/transaction.c
+@@ -420,7 +420,7 @@ int transaction_send(lwm2m_context_t * contextP,
+         }
+         else
+         {
+-            timeout = COAP_RESPONSE_TIMEOUT << (transacP->retrans_counter - 1);
++            timeout = COAP_RESPONSE_TIMEOUT;
+         }
+ 
+         if (COAP_MAX_RETRANSMIT + 1 >= transacP->retrans_counter)
 diff --git a/wakaama/examples/shared/connection.h b/wakaama/examples/shared/connection.h
 index c676bac..f8bd293 100644
 --- a/wakaama/examples/shared/connection.h
