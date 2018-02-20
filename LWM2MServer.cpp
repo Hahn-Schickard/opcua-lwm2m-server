@@ -337,6 +337,33 @@ bool LWM2MServer::hasDevice( std::string client )
 
 /*---------------------------------------------------------------------------*/
 /*
+* LWM2MServer::getLWM2MDevice
+*/
+LWM2MDevice* LWM2MServer::getLWM2MDevice( std::string client )
+{
+    LWM2MDevice* ret = NULL;
+    std::map< std::string, LWM2MDevice* >::iterator it;
+
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
+    it = m_devMap.begin();
+    while( it != m_devMap.end() )
+    {
+      if( it->first == client )
+        break;
+      it++;
+    }
+
+    if( it != m_devMap.end() )
+      ret = it->second;
+    OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
+
+    return ret;
+
+} /* LWM2MServer::getLWM2MDevice() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
 * LWM2MServer::read()
 */
 int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,

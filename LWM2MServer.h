@@ -242,6 +242,14 @@ public:
 
 
     /**
+     * \brief   Get the LWM2M Device object for a device name.
+     *
+     * \return  Pointer to the device if known or NULL if not.
+     */
+    LWM2MDevice* getLWM2MDevice( std::string client );
+
+
+    /**
      * \brief   Read a resources value.
      *
      * \param   p_res The resource to read the value from.
