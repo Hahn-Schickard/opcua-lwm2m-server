@@ -62,9 +62,6 @@
 /** Maximum size of a packet */
 #define LWM2MSERVER_MAX_PACKET_SIZE         1500
 
-/* Device delete timeout */
-#define LWM2MSERVER_DEV_DEL_TOT             10
-
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
 #define OPCUA_LWM2M_SERVER_MUTEX_LOCK(a)        pthread_mutex_lock( &(a)->m_mutex );
 #define OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(a)      pthread_mutex_unlock( &(a)->m_mutex );
@@ -926,7 +923,7 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
             p_srv->m_devEv.push( ev );
 
             /* move the device to the deleted device list */
-            p_srv->m_devDel.push_back( {it->second, (time(NULL) + LWM2MSERVER_DEV_DEL_TOT)} );
+            p_srv->m_devDel.push_back( {it->second, (time(NULL) + (it->second->getLifetime() * 2))} );
             p_srv->m_devMap.erase( it );
 
             ret = 0;
@@ -998,7 +995,7 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
           p_srv->m_devEv.push( ev );
 
           /* move the device to the deleted device list */
-          p_srv->m_devDel.push_back( {it->second, (time(NULL) + LWM2MSERVER_DEV_DEL_TOT)} );
+          p_srv->m_devDel.push_back( {it->second, (time(NULL) + (it->second->getLifetime() * 2))} );
           p_srv->m_devMap.erase( it );
         }
 
