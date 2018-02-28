@@ -112,15 +112,7 @@ public:
      * \brief   Default destructor of the LWM2M Server.
      */
     virtual ~LWM2MObject( void ) {
-
-        std::vector< LWM2MResource* >::iterator it = m_resVect.begin();
-
-        /*delete all Objects */
-        while( it != m_resVect.end() )
-        {
-            delete (*it);
-            it++;
-        }
+        clearResources();
     };
 
 
@@ -164,6 +156,23 @@ public:
      * \return  0 on success or negative value on error.
      */
     int16_t addResource( LWM2MResource* p_res );
+
+
+    /**
+     * \brief   Clear all resources.
+     */
+    void clearResources( void ) {
+
+        std::vector< LWM2MResource* >::iterator it = m_resVect.begin();
+
+        /*delete all Objects */
+        while( it != m_resVect.end() )
+        {
+            delete (*it);
+            it++;
+        }
+        m_resVect.clear();
+    };
 
 
     /**
