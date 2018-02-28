@@ -57,6 +57,34 @@
 
 /*---------------------------------------------------------------------------*/
 /*
+* LWM2MResource::getDevice()
+*/
+const LWM2MDevice* LWM2MResource::getDevice( void ) const
+{
+    if( mp_parent != NULL )
+        return mp_parent->getDevice();
+    else
+        return NULL;
+
+} /* LWM2MResource::getDevice() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MResource::getServer()
+*/
+LWM2MServer* LWM2MResource::getServer( void ) const
+{
+    if( mp_parent != NULL )
+        return mp_parent->getServer();
+    else
+        return NULL;
+
+} /* LWM2MResource::getServer() */
+
+
+/*---------------------------------------------------------------------------*/
+/*
 * LWM2MResource::startServer()
 */
 int8_t LWM2MResource::registerObserver( LWM2MResourceObserver* p_observer )

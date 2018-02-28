@@ -59,6 +59,20 @@
 
 /*---------------------------------------------------------------------------*/
 /*
+* LWM2MObject::getServer()
+*/
+LWM2MServer* LWM2MObject::getServer( void ) const
+{
+    if( mp_parent != NULL )
+        return mp_parent->getServer();
+    else
+        return NULL;
+
+} /* LWM2MObject::getServer
+
+
+/*---------------------------------------------------------------------------*/
+/*
 * LWM2MObject::addResource()
 */
 int16_t LWM2MObject::addResource( LWM2MResource* p_res )

@@ -64,6 +64,8 @@
 
 /* Forward declaration of the LWM2MServer class. */
 class LWM2MServer;
+/* Forward declaration of the LWM2MDevice class used as parent reference. */
+class LWM2MDevice;
 /* Forward declaration of the LWM2MObject class used as parent reference. */
 class LWM2MObject;
 
@@ -128,7 +130,23 @@ public:
      *
      * \return  Parent object.
      */
-    const LWM2MObject* getParent( void ) const {return mp_parent;}
+    const LWM2MObject* getObject( void ) const {return mp_parent;}
+
+
+    /**
+     * \brief   Get Device instance.
+     *
+     * \return  Device object.
+     */
+    const LWM2MDevice* getDevice( void ) const;
+
+
+    /**
+     * \brief   Get server instance.
+     *
+     * \return  Server object.
+     */
+    LWM2MServer* getServer( void ) const;
 
 
     /**

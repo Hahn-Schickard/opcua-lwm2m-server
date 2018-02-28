@@ -145,7 +145,15 @@ public:
      *
      * \return  Parent object.
      */
-    const LWM2MDevice* getParent( void ) const {return mp_parent;}
+    const LWM2MDevice* getDevice( void ) const {return mp_parent;}
+
+
+    /**
+     * \brief   Get server instance.
+     *
+     * \return  Server object.
+     */
+    LWM2MServer* getServer( void ) const;
 
 
     /**

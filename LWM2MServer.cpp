@@ -397,7 +397,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
     if( ret == 0 )
     {
         /* get object of the resource */
-        p_obj = p_res->getParent();
+        p_obj = p_res->getObject();
         if( p_obj == NULL )
             ret = -1;
     }
@@ -405,7 +405,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
     if( ret == 0 )
     {
         /* get device of the resource */
-        p_dev = p_obj->getParent();
+        p_dev = p_obj->getDevice();
         if( p_dev == NULL )
             ret = -1;
     }
@@ -511,14 +511,14 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
         ret = -1;
 
     /* get object of the resource */
-    p_obj = p_res->getParent();
+    p_obj = p_res->getObject();
     if( p_obj == NULL )
         ret = -1;
 
     if( ret == 0 )
     {
         /* get device of the resource */
-        p_dev = p_obj->getParent();
+        p_dev = p_obj->getDevice();
         if( p_dev == NULL )
             ret = -1;
     }
@@ -626,7 +626,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
     if( ret == 0 )
     {
         /* get object of the resource */
-        p_obj = p_res->getParent();
+        p_obj = p_res->getObject();
         if( p_obj == NULL )
             ret = -1;
     }
@@ -634,7 +634,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
     if( ret == 0 )
     {
         /* get device of the resource */
-        p_dev = p_obj->getParent();
+        p_dev = p_obj->getDevice();
         if( p_dev == NULL )
             ret = -1;
     }
