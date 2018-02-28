@@ -95,18 +95,43 @@ class LWM2MServer
 {
     friend class LWM2MDevice;
 
+
+private:
+
+    /**
+     * \brief   Guard class for memory allocation of the singleton.
+     *
+     *          This class is responsible to take care of the memory
+     *          allocation and deallocation for the singleton instance.
+     */
+    class CGuard
+    {
+    public:
+       ~CGuard()
+       {
+          if( NULL != LWM2MServer::m_instance )
+          {
+             delete LWM2MServer::m_instance;
+             LWM2MServer::m_instance = NULL;
+          }
+       }
+    };
+
 public:
 
     /**
-     * User data used for callbacks.
+     * \brief   Get the Singleton Instance of the class.
+     *
+     * \return  Pointer to the single instance of the class.
      */
-    struct s_cbparams_t
-    {
-        /* Pointer to the LWM2M Server to handle the callback */
-        LWM2MServer* p_srv;
-        /* LWM2M parameters */
-        s_lwm2m_resobsparams_t lwm2mParams;
-    };
+    static LWM2MServer* instance( void ) {
+
+        static CGuard g;
+        if (!m_instance)
+            m_instance = new LWM2MServer();
+        return m_instance;
+    }
+
 
 private:
 
@@ -132,7 +157,7 @@ private:
         e_lwm2m_serverobserver_event_t event;
     };
 
-public:
+
 
     /**
      * \brief   Default Constructor to create a LWM2M Server.
@@ -157,38 +182,16 @@ public:
         m_threadRun = false;
 
 #endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
-    };
-
+    }
 
     /**
-     * \brief   Extended Constructor to create a LWM2M Server.
-     *
-     * \param    port        Port to use for the connection.
-     * \param    addrFam        Address family to use (IPv4/IPv6)
+     * \brief   Protection against using copy constructor.
      */
-    LWM2MServer( uint16_t port, int addrFam )
-        : m_sock( -1 )
-        , m_port( LWM2M_STANDARD_PORT_STR )
-        , m_addrFam( AF_INET6 )
-        , mp_connList( NULL )
-        , mp_lwm2mH( NULL )
-        , mp_cbUserData( NULL ) {
-
-#ifdef OPCUA_LWM2M_SERVER_USE_THREAD
-        pthread_mutexattr_t attr;
-        pthread_mutexattr_init( &attr );
-        pthread_mutexattr_settype( &attr, PTHREAD_MUTEX_RECURSIVE );
-
-        /* initialize the mutex */
-        pthread_mutex_init( &m_mutex, &attr );
-
-        m_thread = 0;
-        m_threadRun = false;
-
-#endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
-    };
+    LWM2MServer ( const LWM2MServer& );;
 
 
+
+public:
     /**
      * \brief   Default Destructor of the LWM2M Server.
      */
@@ -258,7 +261,7 @@ public:
      * \return  0 on success or negative value on error.
      */
     int8_t read( const LWM2MResource* p_res, lwm2m_data_t**,
-            s_cbparams_t* p_cbParams );
+        s_lwm2m_resobsparams_t* p_cbParams );
 
 
     /**
@@ -270,7 +273,7 @@ public:
      * \return  0 on success or negative value on error.
      */
     int8_t write( const LWM2MResource* p_res, const std::string& val,
-            s_cbparams_t* p_cbParams );
+        s_lwm2m_resobsparams_t* p_cbParams );
 
 
     /**
@@ -281,8 +284,7 @@ public:
      *
      * \return  0 on success or negative value on error.
      */
-    int8_t observe( const LWM2MResource* p_res, bool observe,
-            s_cbparams_t* p_cbParams );
+    int8_t observe( const LWM2MResource* p_res, bool observe );
 
 
     /**
@@ -293,7 +295,7 @@ public:
      * \return  0 on success or negative value on error.
      */
     int8_t execute( const LWM2MResource* p_res,
-            s_cbparams_t* p_cbParams );
+        s_lwm2m_resobsparams_t* p_cbParams );
 
 
     /**
@@ -411,6 +413,15 @@ private:
 
 
     /**
+     * \brief   Delete observe parameters for a specific device.
+     *
+     * \param   p_dev   Device to delete observe parameters for
+     *
+     */
+    void deletedObserveParams( LWM2MDevice* p_dev );
+
+
+    /**
      * \brief   Callback used to indicate if any action happened for a client.
      *
      *          This function indicates several events e.g. if a new
@@ -430,9 +441,28 @@ private:
             void * userData );
 
 
+    /**
+     * \brief   Callback used to indicate e.g result of read or write.
+     *
+     *          This function indicates several events e.g. the result of
+     *          a read write or when observing a value.
+     *
+     * \param   clientID    The internal device ID of the monitored event.
+     * \param   uriP        The URI the event belongs to.
+     * \param   status      Status of the event.
+     * \param   format      Format of the data included.
+     * \param   data        Data that was included in the event.
+     * \param   dataLength  Length of the data.
+     * \param   userData    User data pointer specified when the function was
+     *                      registered.
+     */
+    static void readWriteCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+            lwm2m_media_type_t format, uint8_t * data, int dataLength,
+            void * userData );
+
 
     /**
-     * \brief   Callback used to indicate e.g result of read write or observe.
+     * \brief   Callback used to indicate e.g result of an observe.
      *
      *          This function indicates several events e.g. the result of
      *          a read write or when observing a value.
@@ -467,6 +497,9 @@ private:
 
 private:
 
+    /* SIngleton instance */
+    static LWM2MServer* m_instance;
+
     /** Socket descriptor used for the server connection */
     int m_sock;
 
@@ -483,7 +516,7 @@ private:
     lwm2m_context_t* mp_lwm2mH;
 
     /** User data for notify call back */
-    struct s_cbparams_t* mp_cbUserData;
+    s_lwm2m_resobsparams_t* mp_cbUserData;
 
     /** LWM2M Devices associated to the server */
     std::map< std::string, LWM2MDevice* > m_devMap;
@@ -496,6 +529,9 @@ private:
 
     /** Vector of registered observer */
     std::vector< LWM2MServerObserver* > m_vectObs;
+
+    /** Map for observe callbacks */
+    std::map< const LWM2MResource*, s_lwm2m_resobsparams_t*> m_obsMap;
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
     /** Mutex for Thread safe execution */
