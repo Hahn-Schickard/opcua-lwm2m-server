@@ -65,11 +65,16 @@
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
 #define OPCUA_LWM2M_SERVER_MUTEX_LOCK(a)        pthread_mutex_lock( &(a)->m_mutex );
 #define OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(a)      pthread_mutex_unlock( &(a)->m_mutex );
+#define OPCUA_LWM2M_SERVER_SLEEP(a)
 #else
 #define OPCUA_LWM2M_SERVER_MUTEX_LOCK(a)
 #define OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(a)
+#define OPCUA_LWM2M_SERVER_SLEEP(a)             usleep(a)
 #endif /* #ifdef OPCUA_LWM2M_SERVER_USE_THREAD */
 
+
+/** Sleeptime while running the OPC UA Server */
+#define LWM2MSERVER_RUN_TOT_US                  5000
 
 /*
  * --- Methods Definition --------------------------------------------------- *
@@ -455,6 +460,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
                 OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
                 if( status != NO_ERROR )
                     break;
+                OPCUA_LWM2M_SERVER_SLEEP(LWM2MSERVER_RUN_TOT_US);
             }
 
             if( p_cbData->lwm2mParams.status == CONTENT_2_05)
@@ -568,6 +574,7 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
                 OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
                 if( status != NO_ERROR )
                     break;
+                OPCUA_LWM2M_SERVER_SLEEP(LWM2MSERVER_RUN_TOT_US);
             }
         }
         else
@@ -698,6 +705,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
             OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
             if( status != -1)
                 break;
+            OPCUA_LWM2M_SERVER_SLEEP(LWM2MSERVER_RUN_TOT_US);
         }
 
         if( p_cbData->lwm2mParams.status == NO_ERROR)
