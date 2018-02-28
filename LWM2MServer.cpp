@@ -660,7 +660,6 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe,
         {
             /* start observation */
             p_cbData->p_srv = this;
-            p_cbData->lwm2mParams.obsInit = true;
             p_cbData->lwm2mParams.dataLen = 0;
             p_cbData->lwm2mParams.status = -1;
 

@@ -93,8 +93,6 @@ typedef struct
     uint8_t * buffer;
     /** Length of the data included */
     int bufferLen;
-    /** Initial observe */
-    bool obsInit;
 
 } s_lwm2m_resobsparams_t;
 
