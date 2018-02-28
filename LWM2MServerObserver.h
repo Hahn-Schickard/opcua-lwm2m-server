@@ -91,8 +91,6 @@ typedef enum
  */
 typedef struct
 {
-  /* Device pointer */
-  const LWM2MDevice* p_dev;
   /* Name of the device */
   char devName[100];
 
