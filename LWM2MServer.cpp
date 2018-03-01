@@ -433,7 +433,7 @@ int8_t LWM2MServer::read( const LWM2MResource* p_res, lwm2m_data_t** val,
                 LWM2M_URI_FLAG_RESOURCE_ID;
 
         p_cbData->status = NO_ERROR;
-        lwm2mRet = lwm2m_dm_read( mp_lwm2mH, p_cli->internalID, &uri, readWriteCb, p_cbData);
+        lwm2mRet = lwm2m_dm_read( mp_lwm2mH, p_cli->internalID, &uri, readWriteResCb, p_cbData);
 
         if( lwm2mRet != COAP_NO_ERROR )
             ret = -1;
@@ -544,7 +544,7 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
         p_cbData->status = NO_ERROR;
 
         lwm2mRet = lwm2m_dm_write( mp_lwm2mH, p_cli->internalID, &uri, LWM2M_CONTENT_TEXT,
-                (uint8_t*)val.c_str(), val.length(), readWriteCb, p_cbData  );
+                (uint8_t*)val.c_str(), val.length(), readWriteResCb, p_cbData  );
 
 
         if( lwm2mRet != COAP_NO_ERROR )
@@ -677,7 +677,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe )
             /* start observation */
             p_cbData->status = -1;
 
-            lwm2mRet = lwm2m_observe( mp_lwm2mH, p_cli->internalID, &uri, notifyCb,
+            lwm2mRet = lwm2m_observe( mp_lwm2mH, p_cli->internalID, &uri, notifyResCb,
                 const_cast<LWM2MResource*>( p_res ));
 
             if( lwm2mRet != COAP_NO_ERROR )
@@ -688,7 +688,7 @@ int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe )
         else
         {
             /* cancel observation */
-            lwm2mRet = lwm2m_observe_cancel( mp_lwm2mH, p_cli->internalID, &uri, notifyCb,
+            lwm2mRet = lwm2m_observe_cancel( mp_lwm2mH, p_cli->internalID, &uri, notifyResCb,
                 const_cast<LWM2MResource*>( p_res ));
 
             if( lwm2mRet != COAP_NO_ERROR )
@@ -1085,7 +1085,7 @@ void LWM2MServer::monitorCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
 /*
 * LWM2MServer::readWriteCb()
 */
-void LWM2MServer::readWriteCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+void LWM2MServer::readWriteResCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         lwm2m_media_type_t format, uint8_t * data, int dataLength,
         void * userData )
 {
@@ -1186,7 +1186,7 @@ void LWM2MServer::readWriteCb( uint16_t clientID, lwm2m_uri_t * uriP, int status
 /*
 * LWM2MServer::notifyCb()
 */
-void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+void LWM2MServer::notifyResCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         lwm2m_media_type_t format, uint8_t * data, int dataLength,
         void * userData )
 {

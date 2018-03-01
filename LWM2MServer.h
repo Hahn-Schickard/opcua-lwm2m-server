@@ -456,7 +456,7 @@ private:
      * \param   userData    User data pointer specified when the function was
      *                      registered.
      */
-    static void readWriteCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+    static void readWriteResCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
             lwm2m_media_type_t format, uint8_t * data, int dataLength,
             void * userData );
 
@@ -476,7 +476,7 @@ private:
      * \param   userData    User data pointer specified when the function was
      *                      registered.
      */
-    static void notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+    static void notifyResCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
             lwm2m_media_type_t format, uint8_t * data, int dataLength,
             void * userData );
 
