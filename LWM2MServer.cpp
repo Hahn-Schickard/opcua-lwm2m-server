@@ -1148,16 +1148,7 @@ void LWM2MServer::readWriteCb( uint16_t clientID, lwm2m_uri_t * uriP, int status
 
         if( ret > 0 )
           p_cbParams->data = p_lwm2mData;
-
-        if( !p_cbParams->dataLen )
-        {
-          /* call the notification */
-          p_res->notifyObservers( p_cbParams );
-          if( p_lwm2mData != NULL )
-            lwm2m_data_free(ret, p_lwm2mData);
-        }
-        else
-          p_cbParams->dataLen = ret;
+        p_cbParams->dataLen = ret;
     }
     else if( p_obj != NULL )
     {
@@ -1273,15 +1264,11 @@ void LWM2MServer::notifyCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
         if( ret > 0 )
           p_cbParams->data = p_lwm2mData;
 
-        if( !p_cbParams->dataLen )
-        {
-          /* call the notification */
-          p_res->notifyObservers( p_cbParams );
-          if( p_lwm2mData != NULL )
-            lwm2m_data_free(ret, p_lwm2mData);
-        }
-        else
-          p_cbParams->dataLen = ret;
+        /* call the notification */
+        p_res->notifyObservers( p_cbParams );
+        if( p_lwm2mData != NULL )
+          lwm2m_data_free(ret, p_lwm2mData);
+
     }
     else if( p_obj != NULL )
     {
