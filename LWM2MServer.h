@@ -167,8 +167,7 @@ private:
         , m_port( LWM2M_STANDARD_PORT_STR )
         , m_addrFam( AF_INET6 )
         , mp_connList( NULL )
-        , mp_lwm2mH( NULL )
-        , mp_cbUserData( NULL ) {
+        , mp_lwm2mH( NULL ) {
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
         pthread_mutexattr_t attr;
@@ -514,9 +513,6 @@ private:
 
     /** LWM2M context */
     lwm2m_context_t* mp_lwm2mH;
-
-    /** User data for notify call back */
-    s_lwm2m_resobsparams_t* mp_cbUserData;
 
     /** LWM2M Devices associated to the server */
     std::map< std::string, LWM2MDevice* > m_devMap;

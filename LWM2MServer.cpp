@@ -119,9 +119,6 @@ int16_t LWM2MServer::startServer( void )
 
     if( ret == 0 )
     {
-        mp_cbUserData = new s_lwm2m_resobsparams_t();
-        memset( mp_cbUserData, 0, sizeof(s_lwm2m_resobsparams_t) );
-
         /* create the socket */
         m_sock = create_socket( m_port.c_str(), m_addrFam );
         if( m_sock < 0 )
@@ -197,12 +194,6 @@ int16_t LWM2MServer::stopServer( void )
         /* close existing LWM2M context */
         lwm2m_close( mp_lwm2mH );
         mp_lwm2mH = NULL;
-    }
-
-    if( mp_cbUserData != NULL )
-    {
-        delete mp_cbUserData;
-        mp_cbUserData = NULL;
     }
 
     OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
