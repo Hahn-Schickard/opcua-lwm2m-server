@@ -25,7 +25,7 @@ index e5237eb..0ee47d6 100644
  #endif
  
 diff --git a/wakaama/core/registration.c b/wakaama/core/registration.c
-index 768f6fd..710870e 100644
+index 768f6fd..b8a0d49 100644
 --- a/wakaama/core/registration.c
 +++ b/wakaama/core/registration.c
 @@ -468,6 +468,24 @@ static void prv_freeClientObjectList(lwm2m_client_object_t * objects)
@@ -53,7 +53,7 @@ index 768f6fd..710870e 100644
  static int prv_getParameters(multi_option_t * query,
                               char ** nameP,
                               uint32_t * lifetimeP,
-@@ -839,20 +857,24 @@ static lwm2m_client_t * prv_getClientByName(lwm2m_context_t * contextP,
+@@ -839,21 +857,28 @@ static lwm2m_client_t * prv_getClientByName(lwm2m_context_t * contextP,
      return targetP;
  }
  
@@ -65,32 +65,38 @@ index 768f6fd..710870e 100644
      if (clientP->msisdn != NULL) lwm2m_free(clientP->msisdn);
      if (clientP->altPath != NULL) lwm2m_free(clientP->altPath);
      prv_freeClientObjectList(clientP->objectList);
++
++    /* Free pending transactions */
 +    prv_freeClientTransactions( contextP, clientP );
++
      while(clientP->observationList != NULL)
      {
          lwm2m_observation_t * targetP;
  
          targetP = clientP->observationList;
-         clientP->observationList = clientP->observationList->next;
+-        clientP->observationList = clientP->observationList->next;
 -        lwm2m_free(targetP);
 +        targetP->callback(clientP->internalID, &targetP->uri,
 +            COAP_503_SERVICE_UNAVAILABLE, LWM2M_CONTENT_TEXT, NULL, 0,
 +            targetP->userData);
 +        observe_remove( clientP, targetP );
      }
++
      lwm2m_free(clientP);
  }
-@@ -940,6 +962,19 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+ 
+@@ -939,8 +964,22 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+             clientP = prv_getClientByName(contextP, name);
              if (clientP != NULL)
              {
-                 // we reset this registration
++                /* Free pending transactions */
 +                prv_freeClientTransactions( contextP, clientP );
+                 // we reset this registration
 +                while(clientP->observationList != NULL)
 +                {
 +                    lwm2m_observation_t * targetP;
 +
 +                    targetP = clientP->observationList;
-+                    clientP->observationList = clientP->observationList->next;
 +                    targetP->callback(clientP->internalID, &targetP->uri,
 +                        COAP_503_SERVICE_UNAVAILABLE, LWM2M_CONTENT_TEXT, NULL, 0,
 +                        targetP->userData);
@@ -98,9 +104,11 @@ index 768f6fd..710870e 100644
 +                }
 +
                  lwm2m_free(clientP->name);
++
                  if (clientP->msisdn != NULL) lwm2m_free(clientP->msisdn);
                  if (clientP->altPath != NULL) lwm2m_free(clientP->altPath);
-@@ -973,12 +1008,12 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+                 prv_freeClientObjectList(clientP->objectList);
+@@ -973,12 +1012,12 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
  
              if (prv_getLocationString(clientP->internalID, location) == 0)
              {
@@ -115,7 +123,7 @@ index 768f6fd..710870e 100644
                  return COAP_500_INTERNAL_SERVER_ERROR;
              }
  
-@@ -1090,7 +1125,7 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
+@@ -1090,7 +1129,7 @@ coap_status_t registration_handleRequest(lwm2m_context_t * contextP,
          {
              contextP->monitorCallback(clientP->internalID, NULL, COAP_202_DELETED, LWM2M_CONTENT_TEXT, NULL, 0, contextP->monitorUserData);
          }
@@ -124,7 +132,7 @@ index 768f6fd..710870e 100644
          result = COAP_202_DELETED;
      }
      break;
-@@ -1192,7 +1227,7 @@ void registration_step(lwm2m_context_t * contextP,
+@@ -1192,7 +1231,7 @@ void registration_step(lwm2m_context_t * contextP,
              {
                  contextP->monitorCallback(clientP->internalID, NULL, COAP_202_DELETED, LWM2M_CONTENT_TEXT, NULL, 0, contextP->monitorUserData);
              }
