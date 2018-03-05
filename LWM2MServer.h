@@ -260,7 +260,7 @@ public:
      * \return  0 on success or negative value on error.
      */
     int8_t read( const LWM2MResource* p_res, lwm2m_data_t**,
-        s_lwm2m_resobsparams_t* p_cbParams );
+        s_lwm2m_obsparams_t* p_cbParams );
 
 
     /**
@@ -272,7 +272,7 @@ public:
      * \return  0 on success or negative value on error.
      */
     int8_t write( const LWM2MResource* p_res, const std::string& val,
-        s_lwm2m_resobsparams_t* p_cbParams );
+        s_lwm2m_obsparams_t* p_cbParams );
 
 
     /**
@@ -294,7 +294,7 @@ public:
      * \return  0 on success or negative value on error.
      */
     int8_t execute( const LWM2MResource* p_res,
-        s_lwm2m_resobsparams_t* p_cbParams );
+        s_lwm2m_obsparams_t* p_cbParams );
 
 
     /**
@@ -526,8 +526,8 @@ private:
     /** Vector of registered observer */
     std::vector< LWM2MServerObserver* > m_vectObs;
 
-    /** Map for observe callbacks */
-    std::map< const LWM2MResource*, s_lwm2m_resobsparams_t*> m_obsMap;
+    /** Map for resource observe callbacks */
+    std::map< const LWM2MResource*, s_lwm2m_obsparams_t*> m_obsResMap;
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
     /** Mutex for Thread safe execution */

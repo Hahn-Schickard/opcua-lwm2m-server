@@ -201,7 +201,7 @@ protected:
      *
      * \return  0 on success or negative value on error.
      */
-    int8_t notifyObservers( const s_lwm2m_resobsparams_t* p_params ) const;
+    int8_t notifyObservers( const s_lwm2m_obsparams_t* p_params ) const;
 
 
 private:

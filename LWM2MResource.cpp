@@ -154,7 +154,7 @@ int8_t LWM2MResource::deregisterObserver( const LWM2MResourceObserver* p_observe
 /*
 * LWM2MResource::notifyObservers()
 */
-int8_t LWM2MResource::notifyObservers( const s_lwm2m_resobsparams_t* p_params ) const
+int8_t LWM2MResource::notifyObservers( const s_lwm2m_obsparams_t* p_params ) const
 {
     /* Iterate through the observers in the list */
     std::vector< LWM2MResourceObserver*>::const_iterator it =

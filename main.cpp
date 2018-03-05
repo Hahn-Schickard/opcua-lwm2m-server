@@ -35,7 +35,7 @@ public:
     virtual ~TestObserver(){};
 
     virtual int8_t notify( const LWM2MServer* p_srv,  const LWM2MResource* p_res,
-            const s_lwm2m_resobsparams_t* p_params ) const {
+            const s_lwm2m_obsparams_t* p_params ) const {
 
         std::string dataStr = "";
 
