@@ -583,6 +583,142 @@ int8_t LWM2MServer::write( const LWM2MResource* p_res, const std::string& val,
 /*
 * LWM2MServer::observe()
 */
+int8_t LWM2MServer::observe( const LWM2MObject* p_obj, bool observe )
+{
+    int8_t ret = 0;
+    lwm2m_client_t* p_cli;
+    const LWM2MDevice* p_dev;
+    lwm2m_uri_t uri;
+
+    std::map< const LWM2MObject*, s_lwm2m_obsparams_t*>::iterator it;
+    s_lwm2m_obsparams_t* p_cbData = NULL;
+    int lwm2mRet;
+
+    if( p_obj == NULL )
+        /* Invalid arguments */
+        ret = -1;
+
+    if( ret == 0 )
+    {
+        it = m_obsObjMap.find( p_obj );
+
+        /* get the observe parameters */
+        if( it == m_obsObjMap.end() )
+        {
+            if( observe == true )
+            {
+                /*create a new entry for the resource */
+                p_cbData = new s_lwm2m_obsparams_t();
+
+                m_obsObjMap.insert(std::pair< const LWM2MObject*, s_lwm2m_obsparams_t* >
+                    ( p_obj, p_cbData ) );
+            }
+        }
+        else
+        {
+            /* use existing parameter */
+            p_cbData = it->second;
+        }
+    }
+
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
+
+    if( ret == 0 )
+    {
+        if( (!isAlive()) || (p_obj == NULL) )
+            ret = -1;
+    }
+
+    if( ret == 0 )
+    {
+        /* get device of the resource */
+        p_dev = p_obj->getDevice();
+        if( p_dev == NULL )
+            ret = -1;
+    }
+
+    if( ret == 0 )
+    {
+        /* find the device in the list of registered devices */
+        p_cli = getDevice( p_dev->getName() );
+        if( p_cli == NULL )
+            ret = -1;
+    }
+
+    if( ret == 0 )
+    {
+        /* start the query with the according values */
+        uri.objectId = p_obj->getObjId();
+        uri.instanceId = p_obj->getInstId();
+        uri.flag = LWM2M_URI_FLAG_OBJECT_ID | LWM2M_URI_FLAG_INSTANCE_ID;
+
+        if( observe == true )
+        {
+            /* start observation */
+            p_cbData->status = -1;
+
+            lwm2mRet = lwm2m_observe( mp_lwm2mH, p_cli->internalID, &uri, notifyObjCb,
+                const_cast<LWM2MObject*>( p_obj ));
+
+            if( lwm2mRet != COAP_NO_ERROR )
+                ret = -1;
+            else
+                ret = 0;
+        }
+        else
+        {
+            /* cancel observation */
+            lwm2mRet = lwm2m_observe_cancel( mp_lwm2mH, p_cli->internalID, &uri, notifyObjCb,
+                const_cast<LWM2MObject*>( p_obj ));
+
+            if( lwm2mRet != COAP_NO_ERROR )
+                ret = -1;
+            else
+                ret = 0;
+        }
+    }
+
+    if( ret == 0 )
+    {
+        while( true )
+        {
+            int status;
+            OPCUA_LWM2M_SERVER_MUTEX_LOCK(this);
+
+#ifndef OPCUA_LWM2M_SERVER_USE_THREAD
+            /* call the server */
+            runServer();
+#endif /* #ifndef OPCUA_LWM2M_SERVER_USE_THREAD */
+            status = p_cbData->status;
+            OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(this);
+            if( status != -1)
+                break;
+            OPCUA_LWM2M_SERVER_SLEEP(LWM2MSERVER_RUN_TOT_US);
+        }
+
+        if( p_cbData->status == NO_ERROR)
+        {
+            ret = 0;
+            if( observe == false )
+            {
+                /* observation was canceled so we have to delete the
+                 * observe parameters */
+              m_obsObjMap.erase( it );
+            }
+        }
+        else
+            ret = -1;
+    }
+    return ret;
+
+} /* LWM2MServer::observe() */
+
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::observe()
+*/
 int8_t LWM2MServer::observe( const LWM2MResource* p_res, bool observe )
 {
     int8_t ret = 0;
@@ -1263,6 +1399,75 @@ void LWM2MServer::notifyResCb( uint16_t clientID, lwm2m_uri_t * uriP, int status
     }
     OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(p_srv);
 };
+
+
+/*---------------------------------------------------------------------------*/
+/*
+* LWM2MServer::notifyObjCb()
+*/
+void LWM2MServer::notifyObjCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+        lwm2m_media_type_t format, uint8_t * data, int dataLength,
+        void * userData )
+{
+    int ret = 0;
+    lwm2m_data_t* p_lwm2mData;
+    std::map< const LWM2MObject*, s_lwm2m_obsparams_t*>::iterator it;
+    s_lwm2m_obsparams_t* p_cbParams;
+
+    LWM2MServer* p_srv = LWM2MServer::instance();
+    LWM2MDevice* p_dev = NULL;
+    LWM2MObject* p_obj = NULL;
+
+    OPCUA_LWM2M_SERVER_MUTEX_LOCK(p_srv);
+
+    it = p_srv->m_obsObjMap.find( (const LWM2MObject*)userData );
+    if( it == p_srv->m_obsObjMap.end() )
+    {
+      /* No observe parameters found for the resource */
+      OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(p_srv);
+      return;
+    }
+    else
+    {
+      /* set parameter pointer */
+      p_cbParams = it->second;
+    }
+
+    /* set LWM2M parameters */
+    p_cbParams->clientID = clientID;
+    p_cbParams->uriP = uriP;
+    p_cbParams->status = status;
+    p_cbParams->format = format;
+    p_cbParams->data = NULL;
+    p_cbParams->buffer = data;
+    p_cbParams->bufferLen = dataLength;
+
+
+    std::map< std::string, LWM2MDevice* >::const_iterator devIt = p_srv->m_devMap.begin();
+    while( devIt != p_srv->m_devMap.end() )
+    {
+      if( devIt->second->getID() == p_cbParams->clientID )
+      {
+        p_dev = devIt->second;
+        break;
+      }
+      devIt++;
+    }
+
+    if( p_dev == NULL )
+    {
+      OPCUA_LWM2M_SERVER_MUTEX_UNLOCK(p_srv);
+      return;
+    }
+
+    if( LWM2M_URI_IS_SET_INSTANCE( p_cbParams->uriP ) )
+    {
+      /* get object */
+      p_obj = p_dev->getObject( p_cbParams->uriP->objectId,
+          p_cbParams->uriP->instanceId );
+    }
+
+    if( p_obj != NULL )
     {
       ret = lwm2m_data_parse( p_cbParams->uriP, p_cbParams->buffer,
              p_cbParams->bufferLen, p_cbParams->format, &p_lwm2mData );

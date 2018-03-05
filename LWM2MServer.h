@@ -275,6 +275,18 @@ public:
         s_lwm2m_obsparams_t* p_cbParams );
 
 
+
+    /**
+     * \brief   Observe an object instance.
+     *
+     * \param   p_obj     The object instance to observe.
+     * \param   observe   Defines if the value shall be observed or not.
+     *
+     * \return  0 on success or negative value on error.
+     */
+    int8_t observe( const LWM2MObject* p_obj, bool observe );
+
+
     /**
      * \brief   Observe a resources value.
      *
@@ -460,6 +472,7 @@ private:
             void * userData );
 
 
+
     /**
      * \brief   Callback used to indicate e.g result of an observe.
      *
@@ -476,6 +489,26 @@ private:
      *                      registered.
      */
     static void notifyResCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
+            lwm2m_media_type_t format, uint8_t * data, int dataLength,
+            void * userData );
+
+
+    /**
+     * \brief   Callback used to indicate e.g result of an observe.
+     *
+     *          This function indicates several events e.g. the result of
+     *          a read write or when observing a value.
+     *
+     * \param   clientID    The internal device ID of the monitored event.
+     * \param   uriP        The URI the event belongs to.
+     * \param   status      Status of the event.
+     * \param   format      Format of the data included.
+     * \param   data        Data that was included in the event.
+     * \param   dataLength  Length of the data.
+     * \param   userData    User data pointer specified when the function was
+     *                      registered.
+     */
+    static void notifyObjCb( uint16_t clientID, lwm2m_uri_t * uriP, int status,
             lwm2m_media_type_t format, uint8_t * data, int dataLength,
             void * userData );
 
@@ -528,6 +561,9 @@ private:
 
     /** Map for resource observe callbacks */
     std::map< const LWM2MResource*, s_lwm2m_obsparams_t*> m_obsResMap;
+
+    /** Map for object observe callbacks */
+    std::map< const LWM2MObject*, s_lwm2m_obsparams_t*> m_obsObjMap;
 
 #ifdef OPCUA_LWM2M_SERVER_USE_THREAD
     /** Mutex for Thread safe execution */
