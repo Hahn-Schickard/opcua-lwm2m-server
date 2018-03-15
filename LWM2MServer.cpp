@@ -1480,14 +1480,14 @@ void LWM2MServer::notifyObjCb( uint16_t clientID, lwm2m_uri_t * uriP, int status
           lwm2m_data_t* p_lwm2mDataCur = p_lwm2mData;
           for( int i = 0; i < ret; i++ )
           {
-              if( p_lwm2mData->id == (*it)->getResId() )
+              if( p_lwm2mDataCur->id == (*it)->getResId() )
               {
                   /* ID match */
                   p_cbParams->data = p_lwm2mDataCur;
                   /* notify */
                   (*it)->notifyObservers( p_cbParams );
               }
-              p_lwm2mData++;
+              p_lwm2mDataCur++;
           }
           it++;
       }
