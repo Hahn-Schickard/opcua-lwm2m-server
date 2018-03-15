@@ -24,6 +24,19 @@ index e5237eb..0ee47d6 100644
      }
  #endif
  
+diff --git a/wakaama/core/observe.c b/wakaama/core/observe.c
+index 86902ae..95d7f61 100644
+--- a/wakaama/core/observe.c
++++ b/wakaama/core/observe.c
+@@ -866,6 +866,8 @@ int lwm2m_observe(lwm2m_context_t * contextP,
+ 
+     coap_set_header_observe(transactionP->message, 0);
+     coap_set_header_token(transactionP->message, token, sizeof(token));
++    if( !LWM2M_URI_IS_SET_RESOURCE(uriP) )
++      coap_set_header_accept(transactionP->message, LWM2M_CONTENT_TLV);
+ 
+     transactionP->callback = prv_obsRequestCallback;
+     transactionP->userData = (void *)observationP;
 diff --git a/wakaama/core/registration.c b/wakaama/core/registration.c
 index 768f6fd..b8a0d49 100644
 --- a/wakaama/core/registration.c
