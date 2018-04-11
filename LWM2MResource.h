@@ -122,7 +122,7 @@ public:
      *
      * \return  Resource ID.
      */
-    int16_t getResId( void ) const {return m_resId;}
+    uint16_t getResId( void ) const {return m_resId;}
 
 
     /**
