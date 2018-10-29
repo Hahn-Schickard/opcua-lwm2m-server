@@ -20,10 +20,10 @@ add_definitions(${SHARED_DEFINITIONS} ${WAKAAMA_DEFINITIONS})
 include_directories (${WAKAAMA_SOURCES_DIR} ${SHARED_INCLUDE_DIRS})
 
 SET(SOURCES
-  ${PROJECT_SOURCE_DIR}/../../niki/opcua-lwm2m-server/LWM2MDevice.cpp
-  ${PROJECT_SOURCE_DIR}/../../niki/opcua-lwm2m-server/LWM2MObject.cpp
-  ${PROJECT_SOURCE_DIR}/../../niki/opcua-lwm2m-server/LWM2MResource.cpp
-  ${PROJECT_SOURCE_DIR}/../../niki/opcua-lwm2m-server/LWM2MServer.cpp
+  ${PROJECT_SOURCE_DIR}/../../opcua-plugin/opcua-lwm2m-server/LWM2MDevice.cpp
+  ${PROJECT_SOURCE_DIR}/../../opcua-plugin/opcua-lwm2m-server/LWM2MObject.cpp
+  ${PROJECT_SOURCE_DIR}/../../opcua-plugin/opcua-lwm2m-server/LWM2MResource.cpp
+  ${PROJECT_SOURCE_DIR}/../../opcua-plugin/opcua-lwm2m-server/LWM2MServer.cpp
 )
 
 add_library(OpcUalwm2m SHARED ${SHARED_SOURCES} ${SOURCES} ${WAKAAMA_SOURCES})
